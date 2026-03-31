@@ -2,4 +2,4 @@
 
 namespace Kayou
 {
-} // Kayou
+}
