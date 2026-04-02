@@ -46,7 +46,12 @@ namespace Kayou
 
     LinearAllocator::~LinearAllocator()
     {
+    #ifdef _WIN32
+        _aligned_free(m_start);
+    #else
         std::free(m_start);
+    #endif
+
         m_start = nullptr;
     }
 
@@ -80,7 +85,7 @@ namespace Kayou
 
     void LinearAllocator::PrintUsage() const
     {
-        std::printf("Linear Allocator: %zu / %zu bytes used!\n", m_usedSize, m_totalSize);
+        printf("Linear Allocator: %zu / %zu bytes used!\n", m_usedSize, m_totalSize);
     }
 
 
