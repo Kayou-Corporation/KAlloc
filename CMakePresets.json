@@ -59,7 +59,6 @@
       "description": "Target Windows with the msvc compiler, debug build type",
       "inherits": "conf-windows-common",
       "cacheVariables": {
-        "CMAKE_C_COMPILER": "cl",
         "CMAKE_CXX_COMPILER": "cl",
         "CMAKE_BUILD_TYPE": "Debug",
         "ENABLE_DEVELOPER_MODE": "ON"
@@ -71,7 +70,6 @@
       "description": "Target Windows with the msvc compiler, release build type",
       "inherits": "conf-windows-common",
       "cacheVariables": {
-        "CMAKE_C_COMPILER": "cl",
         "CMAKE_CXX_COMPILER": "cl",
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
         "ENABLE_DEVELOPER_MODE": "ON"
@@ -83,7 +81,6 @@
       "description": "Target Unix-like OS with the gcc compiler, debug build type",
       "inherits": "conf-unixlike-common",
       "cacheVariables": {
-        "CMAKE_C_COMPILER": "gcc",
         "CMAKE_CXX_COMPILER": "g++",
         "CMAKE_BUILD_TYPE": "Debug"
       }
@@ -94,7 +91,6 @@
       "description": "Target Unix-like OS with the gcc compiler, release build type",
       "inherits": "conf-unixlike-common",
       "cacheVariables": {
-        "CMAKE_C_COMPILER": "gcc",
         "CMAKE_CXX_COMPILER": "g++",
         "CMAKE_BUILD_TYPE": "RelWithDebInfo"
       }
@@ -105,7 +101,6 @@
       "description": "Target Unix-like OS with the clang compiler, debug build type",
       "inherits": "conf-unixlike-common",
       "cacheVariables": {
-        "CMAKE_C_COMPILER": "clang",
         "CMAKE_CXX_COMPILER": "clang++",
         "CMAKE_BUILD_TYPE": "Debug"
       }
@@ -116,7 +111,6 @@
       "description": "Target Unix-like OS with the clang compiler, release build type",
       "inherits": "conf-unixlike-common",
       "cacheVariables": {
-        "CMAKE_C_COMPILER": "clang",
         "CMAKE_CXX_COMPILER": "clang++",
         "CMAKE_BUILD_TYPE": "RelWithDebInfo"
       }
@@ -141,7 +135,6 @@
       "inherits": "conf-windows-common",
       "generator": "Ninja Multi-Config",
       "cacheVariables": {
-        "CMAKE_C_COMPILER": "clang$env{clang_compiler_v}",
         "CMAKE_CXX_COMPILER": "clang++$env{clang_compiler_v}"
       },
       "description": "Compilers: C=clang, CXX=clang++"
@@ -154,7 +147,6 @@
       "generator": "Ninja Multi-Config",
       "binaryDir": "${sourceDir}/TEMP/${presetName}",
       "cacheVariables": {
-        "CMAKE_C_COMPILER": "gcc$env{gcc_compiler_v}",
         "CMAKE_CXX_COMPILER": "g++$env{gcc_compiler_v}",
         "ENGINE_UNIT_TESTS": true
       }
