@@ -147,8 +147,7 @@
       "generator": "Ninja Multi-Config",
       "binaryDir": "${sourceDir}/TEMP/${presetName}",
       "cacheVariables": {
-        "CMAKE_CXX_COMPILER": "g++$env{gcc_compiler_v}",
-        "ENGINE_UNIT_TESTS": true
+        "CMAKE_CXX_COMPILER": "g++$env{gcc_compiler_v}"
       }
     }
   ],

@@ -71,7 +71,13 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-target_link_libraries(KAlloc PUBLIC Tracy::TracyClient)
+
+option(USE_TRACY "Enable Tracy Integration" ON)
+
+if (USE_TRACY)
+    target_link_libraries(KAlloc PUBLIC Tracy::TracyClient)
+    target_compile_definitions(KAlloc PUBLIC KAYOU_USE_TRACY)
+endif ()
 
 
 
