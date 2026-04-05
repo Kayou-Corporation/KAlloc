@@ -10,6 +10,8 @@
 #include <chrono>
 #include <random>
 
+#include "Profiler.hpp"
+
 #ifdef KAYOU_USE_TRACY
 #include <tracy/Tracy.hpp>
 #endif
@@ -18,8 +20,7 @@ int main()
 {
     std::cout << "Starting randomized allocator stress test...\n";
 
-    constexpr std::size_t AllocatorSize = 1024 * 1024; // 1 MB
-    Kayou::TrackedAllocator<Kayou::LinearAllocator> allocator(AllocatorSize);
+    Kayou::TrackedAllocator<Kayou::LinearAllocator> allocator(1024 * 1024);
 
     std::mt19937 rng(std::random_device{}());
 
@@ -33,8 +34,8 @@ int main()
     while (true)
     {
 #ifdef KAYOU_USE_TRACY
-        ZoneScoped;
-        FrameMark;
+        KZoneScoped;
+        KFrameMark;
 #endif
 
         int allocationCount = allocCountDist(rng);

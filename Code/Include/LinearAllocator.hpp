@@ -11,13 +11,13 @@ namespace Kayou
 
         /// Constructor used to register a new Linear Allocator
         /// @param size The allocation size
-        /// @param memAlignment The desired memory alignment (must always be a multiple-of-two)
+        /// @param memAlignment [OPTIONAL] The desired memory alignment (must always be a multiple-of-two)
         explicit LinearAllocator(std::size_t size, std::size_t memAlignment = alignof(std::max_align_t));
         ~LinearAllocator();
 
         /// Function used to register a new allocation
         /// @param size The size of the allocation
-        /// @param memAlignment The desired memory alignment (must always be a multiple-of-two)
+        /// @param memAlignment [OPTIONAL] The desired memory alignment (must always be a multiple-of-two)
         /// @return A pointer to the new Allocator
         void* Alloc(std::size_t size, std::size_t memAlignment);
 

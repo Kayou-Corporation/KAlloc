@@ -32,17 +32,17 @@ namespace Kayou
         /// Internal function called by TrackedAllocator, used to register an allocation internally
         /// @param ptr The pointer to allocate
         /// @param size The allocation block size
-        /// @param tag An optional tag used to differentiate allocation blocs - Defaults to MemoryTag::General
+        /// @param tag [OPTIONAL] A tag used to differentiate allocation blocs - Defaults to MemoryTag::General
         static void AddAllocation(const void* ptr, std::size_t size, MemoryTag tag = MemoryTag::General);
 
         /// Internal function called by TrackedAllocator, used to unregister an allocation internally
         /// @param ptr The pointer to deallocate
         /// @param size The allocation block size
-        /// @param tag An optional tag used to differentiate allocation blocs - Defaults to MemoryTag::General
+        /// @param tag [OPTIONAL] A tag used to differentiate allocation blocs - Defaults to MemoryTag::General
         static void RemoveAllocation(const void* ptr, std::size_t size, MemoryTag tag = MemoryTag::General);
 
         /// Internal function called by TrackedAllocator, used to register all allocations internally
-        /// @param tag An optional tag used to differentiate allocation blocs - Defaults to MemoryTag::General
+        /// @param tag [OPTIONAL] A tag used to differentiate allocation blocs - Defaults to MemoryTag::General
         static void ResetAll(MemoryTag tag = MemoryTag::General);
 
         /// Internal function used to print the allocation report into the console

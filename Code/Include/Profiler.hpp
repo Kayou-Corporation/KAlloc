@@ -3,6 +3,9 @@
 #ifdef KAYOU_USE_TRACY
     #include "Tracy/Tracy.hpp"
     #include "Tracy/TracyC.h"
+
+    #define KZoneScoped ZoneScoped;
+    #define KFrameMark FrameMark;
 #endif
 
 
@@ -30,14 +33,10 @@ namespace Kayou::Profiler
     }
 
 
-    /// Function used to implement Tracy's ZoneScoped operator
-    /// Place at the beginning of the scope you want to measure to record its execution time
-    inline void Zone()
-    {
-        ZoneScoped;
-    }
-
 #else
+
+    #define KZoneScoped ((void)0)
+    #define KFrameMark ((void)0)
 
     /// Helper function used when `USE_TRACY` is enabled in the CMakeLists.txt to track allocations inside Tracy
     inline void Alloc([[maybe_unused]] const void* ptr, [[maybe_unused]] const std::size_t size, [[maybe_unused]] const char* tag = "Unspecified") { }
@@ -46,7 +45,10 @@ namespace Kayou::Profiler
     inline void Free([[maybe_unused]] const void* ptr, [[maybe_unused]] const char* tag = "Unspecified") { }
 
     /// Helper function used when `USE_TRACY` is enabled in the CMakeLists.txt to register a new tracking zone
-    inline void Zone() { }
+    inline void KZoneScoped() { }
+
+    /// Helper function used when `USE_TRACY` is enabled in the CMakeLists.txt to register a new FrameMark
+    inline void KFrameMark() { }
 
 #endif
 }
