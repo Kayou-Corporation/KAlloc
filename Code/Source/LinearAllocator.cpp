@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <bit>
 #include <cassert>
-#include <cstdint>      // uintptr_t
+#include <cstdint>      // std::uintptr_t
 #include <cstdio>
 #include <stdexcept>
 

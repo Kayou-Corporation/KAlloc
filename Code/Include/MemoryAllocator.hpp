@@ -26,4 +26,11 @@ namespace Kayou
     {
         { a.Reset() } -> std::same_as<void>;
     };
+
+
+    template <typename A>
+    concept PrintableAllocator = requires(A a)
+    {
+        { a.PrintUsage() } -> std::same_as<void>;
+    };
 }
