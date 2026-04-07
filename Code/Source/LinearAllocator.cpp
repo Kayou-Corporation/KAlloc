@@ -1,7 +1,10 @@
 #include "LinearAllocator.hpp"
 
+#include <algorithm>
+#include <bit>
 #include <cassert>
 #include <cstdint>      // uintptr_t
+#include <cstdio>
 #include <stdexcept>
 
 #ifndef _WIN32

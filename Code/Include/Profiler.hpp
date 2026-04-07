@@ -39,16 +39,10 @@ namespace Kayou::Profiler
     #define KFrameMark ((void)0)
 
     /// Helper function used when `USE_TRACY` is enabled in the CMakeLists.txt to track allocations inside Tracy
-    inline void Alloc([[maybe_unused]] const void* ptr, [[maybe_unused]] const std::size_t size, [[maybe_unused]] const char* tag = "Unspecified") { }
+    inline void Alloc([[maybe_unused]] const void* ptr, [[maybe_unused]] const size_t size, [[maybe_unused]] const char* tag = "Unspecified") { }
 
     /// Helper function used when `USE_TRACY` is enabled in the CMakeLists.txt to untrack allocations inside Tracy
     inline void Free([[maybe_unused]] const void* ptr, [[maybe_unused]] const char* tag = "Unspecified") { }
-
-    /// Helper function used when `USE_TRACY` is enabled in the CMakeLists.txt to register a new tracking zone
-    inline void KZoneScoped() { }
-
-    /// Helper function used when `USE_TRACY` is enabled in the CMakeLists.txt to register a new FrameMark
-    inline void KFrameMark() { }
 
 #endif
 }
