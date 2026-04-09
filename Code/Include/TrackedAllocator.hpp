@@ -5,7 +5,6 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
-#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -35,7 +34,7 @@ namespace Kayou
         /// @param tag [OPTIONAL] A tag used to differentiate allocation blocs - Defaults to MemoryTag::General
         /// @param memAlignment The desired memory alignment (must always be a multiple-of-two)
         /// @return A pointer to the new Allocator
-        void* Alloc(std::size_t size, MemoryTag tag = MemoryTag::General, const std::size_t memAlignment = alignof(std::max_align_t))
+        inline void* Alloc(std::size_t size, MemoryTag tag = MemoryTag::General, const std::size_t memAlignment = alignof(std::max_align_t))
         {
             if (size == 0)
                 return nullptr;
@@ -64,48 +63,46 @@ namespace Kayou
             MemoryTracker::AddAllocation(userPtr, size, tag);
 
             if constexpr (ResettableAllocator<Derived>)
-                m_allocations.emplace_back(userPtr, size, tag);
+                m_activeAllocations.push_back({ userPtr, size, tag });
 
             return userPtr;
         }
 
 
-        void Free(void* ptr) requires FreeableAllocator<Derived>
+        inline void Free(void* ptr) requires FreeableAllocator<Derived>
         {
             if (ptr == nullptr)
                 return;
 
             const AllocationHeader* header = GetAllocationHeader(ptr);
-        #ifdef KAYOU_DEBUG
+
+            #ifdef KAYOU_DEBUG
             assert(header->magic == kAllocationHeaderMagic && "Allocation header corrupted or invalid pointer");
-        #endif
+            #endif
 
             const std::uintptr_t userAddress = reinterpret_cast<std::uintptr_t>(ptr);
-
             const std::size_t size = header->size;
             const MemoryTag tag = header->tag;
             const std::uint32_t adjustment = header->adjustment;
+
             assert(adjustment >= sizeof(AllocationHeader) && "Invalid allocation header adjustment");
 
             void* rawPtr = reinterpret_cast<void*>(userAddress - adjustment);
-            MemoryTracker::RemoveAllocation(ptr, size, tag);
+            assert(rawPtr != nullptr && "Reconstructed raw pointer is invalid");
+
+            RemoveTrackedAllocation(ptr, size, tag);
 
             if constexpr (ResettableAllocator<Derived>)
             {
-                const auto it = std::find_if(m_allocations.begin(), m_allocations.end(),
-                    [ptr](const auto& alloc)
+                const auto it = std::find_if(m_activeAllocations.begin(), m_activeAllocations.end(),
+                    [ptr](const ActiveAllocation& alloc)
                     {
-                        return std::get<0>(alloc) == ptr;
+                        return alloc.ptr == ptr;
                     });
 
-                if (it != m_allocations.end())
-                    m_allocations.erase(it);
+                if (it != m_activeAllocations.end())
+                    m_activeAllocations.erase(it);
             }
-
-        #ifdef KAYOU_DEBUG
-            AllocationHeader* mutableHeader = GetAllocationHeader(ptr);
-            mutableHeader->magic = 0u;
-        #endif
 
             m_derived.Free(rawPtr);
         }
@@ -114,30 +111,34 @@ namespace Kayou
         /// Function used to reset the linear allocator
         ///     Because, by concept, a Linear Allocator will free the entire allocated block,
         ///     This will replace any Free() function
-        void Reset() requires ResettableAllocator<Derived>
+        inline void Reset() requires ResettableAllocator<Derived>
         {
-            for (const auto& [ptr, size, tag] : m_allocations)
-                MemoryTracker::RemoveAllocation(ptr, size, tag);
+            for (const ActiveAllocation& alloc : m_activeAllocations)
+                RemoveTrackedAllocation(alloc.ptr, alloc.size, alloc.tag);
 
-            m_allocations.clear();
+            m_activeAllocations.clear();
             m_derived.Reset();
         }
 
 
         /// Function used to print the allocator's usage
-        void PrintUsage() const requires PrintableAllocator<Derived>
+        inline void PrintUsage() const requires PrintableAllocator<Derived>
         {
             m_derived.PrintUsage();
         }
 
 
-        [[nodiscard]] Derived& Allocator()
+        /// Non-const getter to access an allocator
+        /// @return The desired allocator (not const)
+        [[nodiscard]] inline Derived& GetAllocator()
         {
             return m_derived;
         }
 
 
-        [[nodiscard]] const Derived& GetAllocator() const
+        /// Const getter to access an allocator
+        /// @return The desired allocator (const)
+        [[nodiscard]] inline const Derived& GetAllocator() const
         {
             return m_derived;
         }
@@ -145,12 +146,32 @@ namespace Kayou
 
 
     private:
-        static std::uintptr_t AlignForward(const std::uintptr_t address, const std::size_t memAlignment)
+        struct ActiveAllocation
+        {
+            void* ptr;
+            std::size_t size;
+            MemoryTag tag;
+        };
+
+
+        inline static std::uintptr_t AlignForward(const std::uintptr_t address, const std::size_t memAlignment)
         {
             return (address + (memAlignment - 1)) & ~(memAlignment - 1);
         }
 
-        std::vector<std::tuple<void*, std::size_t, MemoryTag>> m_allocations { };
+
+        inline void RemoveTrackedAllocation(void* ptr, const std::size_t size, const MemoryTag tag)
+        {
+            #ifdef KAYOU_DEBUG
+            AllocationHeader* header = GetAllocationHeader(ptr);
+            header->magic = 0u;
+            #endif
+
+            MemoryTracker::RemoveAllocation(ptr, size, tag);
+        }
+
+
+        std::vector<ActiveAllocation> m_activeAllocations { };
         Derived m_derived;
     };
 }

@@ -3,9 +3,8 @@
 #include <algorithm>
 #include <bit>
 #include <cassert>
-#include <cstdint>      // std::uintptr_t
+#include <cstdint>      // GCC std::uintptr_t
 #include <cstdio>
-#include <cstdlib>
 
 
 namespace Kayou

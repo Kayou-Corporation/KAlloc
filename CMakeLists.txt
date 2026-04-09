@@ -72,6 +72,7 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
+# Toggle tracy internal integration
 option(USE_TRACY "Enable Tracy Integration" ON)
 
 if (USE_TRACY)
@@ -80,6 +81,11 @@ if (USE_TRACY)
 endif ()
 
 
+# Toggle debug features
+option(DEBUG_ENABLED "Toggle Internal Debugging Features" ON)
+if (DEBUG_ENABLED)
+    target_compile_definitions(KAlloc PUBLIC KAYOU_DEBUG)
+endif ()
 
 #---------------------------------------#
 #        EXPORTS / IMPORTS FOR LIB      #
