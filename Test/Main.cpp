@@ -64,7 +64,6 @@ int main()
     std::cout << "TrackedAllocator<LinearAllocator> validation test\n";
     PrintSeparator();
 
-    // Taille volontairement modeste pour rendre les overflows faciles à observer.
     constexpr std::size_t allocatorSize = 4096;
     Kayou::TrackedAllocator<Kayou::LinearAllocator> allocator(allocatorSize);
 
