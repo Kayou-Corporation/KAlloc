@@ -1,8 +1,16 @@
 #---------------------------------------#
 #            BUILD MODE                 #
 #---------------------------------------#
+# Which test should be enable (only one can be enabled at once)
+option(KAYOU_TLINEAR_TEST "Enable Tracked Linear Allocator Tests" OFF)
+option(KAYOU_TPOOL_TEST "Enable Tracked Pool Allocator Tests" ON)
+option(KAYOU_TSTACK_TEST "Enable Tracked Stack Allocator Tests" OFF)
 
-add_executable(KAlloc_TEST "Main.cpp")
+if (KAYOU_TLINEAR_TEST)
+    add_executable(KAlloc_TEST "TLinearAllocator.cpp")
+elseif (KAYOU_TPOOL_TEST)
+    add_executable(KAlloc_TEST "TPoolAllocator.cpp")
+endif ()
 
 
 

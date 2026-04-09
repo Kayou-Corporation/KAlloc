@@ -49,6 +49,8 @@ endif()
 #---------------------------------------#
 target_include_directories(KAlloc PUBLIC "Code/Include")
 
+
+
 #---------------------------------------#
 #                COMPILE MODE           #
 #---------------------------------------#
@@ -72,6 +74,10 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
+
+#---------------------------------------#
+#           COMPILING OPTIONS           #
+#---------------------------------------#
 # Toggle tracy internal integration
 option(USE_TRACY "Enable Tracy Integration" ON)
 
@@ -86,6 +92,8 @@ option(DEBUG_ENABLED "Toggle Internal Debugging Features" ON)
 if (DEBUG_ENABLED)
     target_compile_definitions(KAlloc PUBLIC KAYOU_DEBUG)
 endif ()
+
+
 
 #---------------------------------------#
 #        EXPORTS / IMPORTS FOR LIB      #

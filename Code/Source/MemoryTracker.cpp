@@ -28,11 +28,12 @@ namespace Kayou::Memory
         const std::size_t index = static_cast<std::size_t>(tag);
 
         #ifdef KAYOU_DEBUG
-            const std::size_t current = s_allocated[index].load();
-            assert(current >= size && "MemoryTracker::RemoveAllocation underflow");
+            const std::size_t previous = s_allocated[index].fetch_sub(size); // Thread-safe sub operation
+            assert(previous >= size && "MemoryTracker::RemoveAllocation underflow");
+        #else
+        s_allocated[index] -= size;
         #endif
 
-        s_allocated[index] -= size;
         Profiler::Free(ptr, GetTagName(tag)); // Calls tracy profiling if enabled in cmake
     }
 
@@ -41,7 +42,7 @@ namespace Kayou::Memory
     {
         const std::size_t index = static_cast<std::size_t>(tag);
         s_allocated[index] = 0;
-        // do not reset s_peak in order to remember the peak mem usage
+        // do not reset s_peak to remember the peak mem usage
     }
 
 

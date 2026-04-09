@@ -1,6 +1,7 @@
 #include "LinearAllocator.hpp"
-#include "TrackedAllocator.hpp"
 #include "MemoryTracker.hpp"
+#include "Profiler.hpp"
+#include "TrackedAllocator.hpp"
 
 #include <cassert>
 #include <cstdint>
@@ -9,55 +10,61 @@
 #include <iostream>
 #include <vector>
 
-#include "Profiler.hpp"
 
-namespace
+const char* ToString(Kayou::Memory::MemoryTag tag)
 {
-    const char* ToString(Kayou::MemoryTag tag)
+    switch (tag)
     {
-        switch (tag)
-        {
-            case Kayou::MemoryTag::General:  return "General";
-            case Kayou::MemoryTag::Renderer: return "Renderer";
-            case Kayou::MemoryTag::Physics:  return "Physics";
-            case Kayou::MemoryTag::ECS:      return "ECS";
-            case Kayou::MemoryTag::Audio:    return "Audio";
-            default:                         return "Unknown";
-        }
+        case Kayou::Memory::MemoryTag::General:
+            return "General";
+        case Kayou::Memory::MemoryTag::Renderer:
+            return "Renderer";
+        case Kayou::Memory::MemoryTag::Physics:
+            return "Physics";
+        case Kayou::Memory::MemoryTag::ECS:
+            return "ECS";
+        case Kayou::Memory::MemoryTag::Audio:
+            return "Audio";
+        default:
+            return "Unknown";
     }
+}
 
-    bool IsAligned(const void* ptr, const std::size_t alignment)
-    {
-        const auto address = reinterpret_cast<std::uintptr_t>(ptr);
-        return (address % alignment) == 0;
-    }
 
-    void PrintSeparator()
-    {
-        std::cout << "============================================================\n";
-    }
+bool IsAligned(const void* ptr, const std::size_t alignment)
+{
+    const std::uintptr_t address = reinterpret_cast<std::uintptr_t>(ptr);
+    return (address % alignment) == 0;
+}
 
-    void PrintPointerInfo(const void* ptr, std::size_t size, std::size_t alignment, Kayou::MemoryTag tag)
-    {
-        std::cout
+
+void PrintSeparator()
+{
+    std::cout << "============================================================\n";
+}
+
+
+void PrintPointerInfo(const void* ptr, std::size_t size, std::size_t alignment, Kayou::Memory::MemoryTag tag)
+{
+    std::cout
             << "Alloc request | size=" << std::setw(4) << size
             << " | align=" << std::setw(3) << alignment
             << " | tag=" << std::setw(8) << ToString(tag);
 
-        if (ptr == nullptr)
-        {
-            std::cout << " | ptr=nullptr\n";
-            return;
-        }
+    if (ptr == nullptr)
+    {
+        std::cout << " | ptr=nullptr\n";
+        return;
+    }
 
-        const auto address = reinterpret_cast<std::uintptr_t>(ptr);
+    const std::uintptr_t address = reinterpret_cast<std::uintptr_t>(ptr);
 
-        std::cout
+    std::cout
             << " | ptr=0x" << std::hex << address << std::dec
             << " | aligned=" << (IsAligned(ptr, alignment) ? "YES" : "NO")
             << '\n';
-    }
 }
+
 
 int main()
 {
@@ -65,30 +72,30 @@ int main()
     PrintSeparator();
 
     constexpr std::size_t allocatorSize = 4096;
-    Kayou::TrackedAllocator<Kayou::LinearAllocator> allocator(allocatorSize);
+    Kayou::Memory::TrackedAllocator<Kayou::Memory::LinearAllocator> allocator(allocatorSize);
 
     std::cout << "Allocator created with total size = " << allocatorSize << " bytes\n";
     allocator.PrintUsage();
-    Kayou::MemoryTracker::PrintReport();
+    Kayou::Memory::MemoryTracker::PrintReport();
     PrintSeparator();
 
     struct TestAlloc
     {
         std::size_t size;
         std::size_t alignment;
-        Kayou::MemoryTag tag;
+        Kayou::Memory::MemoryTag tag;
     };
 
     const std::vector<TestAlloc> tests =
     {
-        {  24,  8, Kayou::MemoryTag::General  },
-        {  64, 16, Kayou::MemoryTag::Renderer },
-        { 128, 32, Kayou::MemoryTag::Physics  },
-        {  80, 64, Kayou::MemoryTag::ECS      },
-        { 200, 16, Kayou::MemoryTag::Audio    },
-        {  13,  8, Kayou::MemoryTag::Renderer },
-        {  97, 32, Kayou::MemoryTag::General  },
-        { 256, 64, Kayou::MemoryTag::Physics  }
+        {24, 8, Kayou::Memory::MemoryTag::General},
+        {64, 16, Kayou::Memory::MemoryTag::Renderer},
+        {128, 32, Kayou::Memory::MemoryTag::Physics},
+        {80, 64, Kayou::Memory::MemoryTag::ECS},
+        {200, 16, Kayou::Memory::MemoryTag::Audio},
+        {13, 8, Kayou::Memory::MemoryTag::Renderer},
+        {97, 32, Kayou::Memory::MemoryTag::General},
+        {256, 64, Kayou::Memory::MemoryTag::Physics}
     };
 
     std::vector<void*> allocatedPtrs;
@@ -97,7 +104,7 @@ int main()
     std::cout << "PHASE 1 - deterministic allocations\n";
     PrintSeparator();
 
-    for (const auto& test : tests)
+    for (const TestAlloc& test : tests)
     {
         void* ptr = allocator.Alloc(test.size, test.tag, test.alignment);
         PrintPointerInfo(ptr, test.size, test.alignment, test.tag);
@@ -114,25 +121,22 @@ int main()
     PrintSeparator();
     std::cout << "After deterministic allocations:\n";
     allocator.PrintUsage();
-    Kayou::MemoryTracker::PrintReport();
+    Kayou::Memory::MemoryTracker::PrintReport();
     PrintSeparator();
 
     std::cout << "PHASE 2 - zero-sized allocation\n";
-    PrintSeparator();
-
-    {
-        void* ptr = allocator.Alloc(0, Kayou::MemoryTag::General, 16);
+    PrintSeparator(); {
+        void* ptr = allocator.Alloc(0, Kayou::Memory::MemoryTag::General, 16);
         std::cout << "Alloc(0, General, 16) => " << (ptr == nullptr ? "nullptr" : "NON-NULL (unexpected)") << '\n';
         assert(ptr == nullptr && "Zero-sized allocation should return nullptr");
     }
 
     PrintSeparator();
     std::cout << "PHASE 3 - overflow test\n";
-    PrintSeparator();
-
-    {
-        void* bigPtr = allocator.Alloc(100000, Kayou::MemoryTag::Renderer, 16);
-        std::cout << "Alloc(100000, Renderer, 16) => " << (bigPtr == nullptr ? "nullptr" : "NON-NULL (unexpected)") << '\n';
+    PrintSeparator(); {
+        void* bigPtr = allocator.Alloc(100000, Kayou::Memory::MemoryTag::Renderer, 16);
+        std::cout << "Alloc(100000, Renderer, 16) => " << (bigPtr == nullptr ? "nullptr" : "NON-NULL (unexpected)")
+                << '\n';
         assert(bigPtr == nullptr && "Huge allocation should overflow and return nullptr");
     }
 
@@ -141,7 +145,7 @@ int main()
     PrintSeparator();
 
     allocator.PrintUsage();
-    Kayou::MemoryTracker::PrintReport();
+    Kayou::Memory::MemoryTracker::PrintReport();
 
     PrintSeparator();
     std::cout << "PHASE 5 - reset\n";
@@ -151,7 +155,7 @@ int main()
 
     std::cout << "After Reset():\n";
     allocator.PrintUsage();
-    Kayou::MemoryTracker::PrintReport();
+    Kayou::Memory::MemoryTracker::PrintReport();
 
     PrintSeparator();
     std::cout << "PHASE 6 - allocations after reset\n";
@@ -159,13 +163,13 @@ int main()
 
     const std::vector<TestAlloc> postResetTests =
     {
-        {  32,  8, Kayou::MemoryTag::General  },
-        {  64, 16, Kayou::MemoryTag::Renderer },
-        { 128, 32, Kayou::MemoryTag::Physics  },
-        {  48, 64, Kayou::MemoryTag::Audio    }
+        {32, 8, Kayou::Memory::MemoryTag::General},
+        {64, 16, Kayou::Memory::MemoryTag::Renderer},
+        {128, 32, Kayou::Memory::MemoryTag::Physics},
+        {48, 64, Kayou::Memory::MemoryTag::Audio}
     };
 
-    for (const auto& test : postResetTests)
+    for (const TestAlloc& test : postResetTests)
     {
         void* ptr = allocator.Alloc(test.size, test.tag, test.alignment);
         PrintPointerInfo(ptr, test.size, test.alignment, test.tag);
@@ -180,7 +184,7 @@ int main()
     PrintSeparator();
     std::cout << "Final allocator state before final reset:\n";
     allocator.PrintUsage();
-    Kayou::MemoryTracker::PrintReport();
+    Kayou::Memory::MemoryTracker::PrintReport();
 
     PrintSeparator();
     std::cout << "PHASE 7 - final reset\n";
@@ -190,10 +194,11 @@ int main()
 
     std::cout << "After final Reset():\n";
     allocator.PrintUsage();
-    Kayou::MemoryTracker::PrintReport();
+    Kayou::Memory::MemoryTracker::PrintReport();
 
     PrintSeparator();
     std::cout << "All validation steps completed.\n";
 
+    getchar(); // Required on some platforms to prevent the console from instantly closing
     return 0;
 }
