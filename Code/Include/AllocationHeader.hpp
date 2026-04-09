@@ -6,10 +6,13 @@
 #include <cstddef>
 #include <cstdint>      // GCC std::uint32_t
 
-#include "MemoryTracker.hpp"
 
 
-enum class MemoryTag : uint8_t;
+namespace Kayou::Memory
+{
+    enum class MemoryTag : uint8_t;
+}
+
 
 namespace Kayou::Memory::Internal
 {

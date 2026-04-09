@@ -1,9 +1,8 @@
 #include "MemoryTracker.hpp"
-
-#include <cstdio>
-
 #include "Profiler.hpp"
 
+#include <cstdio>
+#include <cassert>          // assert
 
 
 namespace Kayou::Memory
@@ -28,10 +27,13 @@ namespace Kayou::Memory
     {
         const std::size_t index = static_cast<std::size_t>(tag);
 
-        s_allocated[index] -= size;
+        #ifdef KAYOU_DEBUG
+            const std::size_t current = s_allocated[index].load();
+            assert(current >= size && "MemoryTracker::RemoveAllocation underflow");
+        #endif
 
-        // Calls tracy profiling if enabled in cmake
-        Profiler::Free(ptr, GetTagName(tag));
+        s_allocated[index] -= size;
+        Profiler::Free(ptr, GetTagName(tag)); // Calls tracy profiling if enabled in cmake
     }
 
 
@@ -39,7 +41,7 @@ namespace Kayou::Memory
     {
         const std::size_t index = static_cast<std::size_t>(tag);
         s_allocated[index] = 0;
-        // do not reset s_peak in order to remember maximum
+        // do not reset s_peak in order to remember the peak mem usage
     }
 
 

@@ -29,13 +29,21 @@ namespace Kayou::Memory
         /// Function used to print the allocator's usage
         void PrintUsage() const;
 
-        /// Helper function used to get the size used by allocator
-        /// @return The previous used size of the allocator
-        [[nodiscard]] std::size_t LastAllocSize() const;
+        /// Getter for the used size
+        /// @return The used size of the allocator
+        [[nodiscard]] inline std::size_t GetUsedSize() const { return m_usedSize; }
 
-        /// Helper function used to get the offset (alignment) of the allocator
+        /// Getter for the offset (memory alignment)
         /// @return The current offset (alignment) of the allocator
-        [[nodiscard]] std::size_t GetOffset() const { return m_offset; }
+        [[nodiscard]] inline std::size_t GetOffset() const { return m_offset; }
+
+        /// Getter for the peak allocation
+        /// @return the current peak allocation value
+        [[nodiscard]] inline std::size_t GetPeakSize() const { return m_peakSize; }
+
+        /// Getter for the total allocator size
+        /// @return The allocator's total size
+        [[nodiscard]] inline std::size_t GetTotalSize() const { return m_totalSize; }
 
 
     private:
@@ -45,10 +53,6 @@ namespace Kayou::Memory
         /// @param memAlignment The desired memory alignment (always a multiple of 2)
         /// @return The new address for the pointer
         static std::size_t AlignForward(std::size_t ptrAddress, std::size_t memAlignment);
-
-        /// Internal function used to track both the current allocation size and the total peak usage
-        /// @param size The allocation size
-        void TrackAlloc(std::size_t size);
 
         std::byte* m_start = nullptr;
         std::size_t m_offset = 0;

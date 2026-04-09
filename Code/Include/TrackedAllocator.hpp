@@ -42,7 +42,7 @@ namespace Kayou::Memory
             assert(std::has_single_bit(memAlignment) && "memAlignment must be a power of 2");
 
             const std::size_t totalSize = size + sizeof(Internal::AllocationHeader) + memAlignment - 1;
-            void* rawPtr = m_derived.Alloc(totalSize, alignof(std::max_align_t));
+            void* rawPtr = m_derived.Alloc(totalSize, std::max(memAlignment, alignof(std::max_align_t)));
             if (rawPtr == nullptr)
                 return nullptr;
 

@@ -18,7 +18,8 @@ namespace Kayou::Memory
         void Reset();
         void PrintUsage() const;
 
-        [[nodiscard]] inline size_t GetBlockCapacity() const { return m_blockCapacity; }
+        [[nodiscard]] inline size_t GetRawBlockCapacity() const { return m_blockCapacity; }
+        [[nodiscard]] inline size_t GetBlockStride() const { return m_blockStride; }
         [[nodiscard]] inline size_t GetObjectCount() const { return m_objectCount; }
         [[nodiscard]] inline size_t GetAlignment() const { return m_alignment; }
         [[nodiscard]] inline size_t GetUsedBlocks() const { return m_usedBlocks; }
@@ -54,8 +55,8 @@ namespace Kayou::Memory
         std::byte* m_start = nullptr;
         FreeNode* m_freeList = nullptr;
 
-        std::size_t m_blockCapacity = 0;    // Maximum raw size accepted per allocation (internal capacity)
-        std::size_t m_blockStride = 0;        // Actual aligned size between blocks in memory
+        std::size_t m_blockCapacity = 0;        // Maximum raw size accepted per allocation (internal capacity)
+        std::size_t m_blockStride = 0;          // Actual aligned size between blocks in memory
         std::size_t m_objectCount = 0;
         std::size_t m_alignment = 0;
         std::size_t m_totalSize = 0;

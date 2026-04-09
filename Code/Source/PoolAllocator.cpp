@@ -26,7 +26,7 @@ namespace Kayou::Memory
         const std::uintptr_t startAddress = reinterpret_cast<std::uintptr_t>(m_start);
         const std::size_t offset = ptrAddress - startAddress;
 
-        return offset / m_blockCapacity;
+        return offset / m_blockStride;
     }
 
 

@@ -91,17 +91,4 @@ namespace Kayou::Memory
     {
         printf("Linear Allocator: %zu bytes used (offset = %zu, peak = %zu) / %zu total\n", m_usedSize, m_offset, m_peakSize, m_totalSize);
     }
-
-
-    std::size_t LinearAllocator::LastAllocSize() const
-    {
-        return m_usedSize;
-    }
-
-
-    void LinearAllocator::TrackAlloc(const std::size_t size)
-    {
-        m_usedSize += size;
-        m_peakSize = std::max(m_peakSize, m_usedSize);
-    }
 }
