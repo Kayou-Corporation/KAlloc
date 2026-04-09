@@ -12,7 +12,7 @@
 
 
 
-namespace Kayou
+namespace Kayou::Memory
 {
     std::size_t PoolAllocator::AlignUp(const std::size_t size, const std::size_t memAlignment)
     {

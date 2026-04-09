@@ -3,7 +3,7 @@
 #include "MemoryAllocator.hpp"
 
 
-namespace Kayou
+namespace Kayou::Memory
 {
     class LinearAllocator
     {

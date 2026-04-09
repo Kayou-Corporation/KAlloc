@@ -13,7 +13,7 @@
 
 
 
-namespace Kayou
+namespace Kayou::Memory
 {
 
     std::size_t LinearAllocator::AlignForward(const std::size_t ptrAddress, const std::size_t memAlignment)
@@ -25,20 +25,17 @@ namespace Kayou
     LinearAllocator::LinearAllocator(std::size_t size, std::size_t memAlignment)
     {
         assert(std::has_single_bit(memAlignment) && "Alignment must be a power of 2!");
-
-        // TODO : Remove later
-        //size = (size + memAlignment - 1) & ~(memAlignment - 1);
         size = AlignForward(size, memAlignment);
 
-#ifdef _WIN32
+        #ifdef _WIN32
         m_start = static_cast<std::byte*>(_aligned_malloc(size, memAlignment));
-#else
+        #else
         void* ptr = nullptr;
         if (posix_memalign(&ptr, memAlignment, size) != 0)
             ptr = nullptr;
 
         m_start = static_cast<std::byte*>(ptr);
-#endif
+        #endif
 
         assert(m_start && "LinearAllocator allocation failed!");
 
@@ -49,11 +46,11 @@ namespace Kayou
 
     LinearAllocator::~LinearAllocator()
     {
-    #ifdef _WIN32
+        #ifdef _WIN32
         _aligned_free(m_start);
-    #else
+        #else
         std::free(m_start);
-    #endif
+        #endif
 
         m_start = nullptr;
     }

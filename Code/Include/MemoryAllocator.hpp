@@ -5,7 +5,7 @@
 
 
 
-namespace Kayou
+namespace Kayou::Memory
 {
     template <typename A>
     concept Allocator = requires(A a, std::size_t size, std::size_t memAlignment)

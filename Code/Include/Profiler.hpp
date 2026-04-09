@@ -10,7 +10,7 @@
 
 
 
-namespace Kayou::Profiler
+namespace Kayou::Memory::Profiler
 {
 #ifdef KAYOU_USE_TRACY
 

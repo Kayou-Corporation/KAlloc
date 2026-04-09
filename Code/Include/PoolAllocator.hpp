@@ -5,7 +5,7 @@
 
 
 
-namespace Kayou
+namespace Kayou::Memory
 {
     class PoolAllocator
     {

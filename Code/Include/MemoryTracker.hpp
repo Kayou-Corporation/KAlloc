@@ -11,7 +11,7 @@
 
 
 
-namespace Kayou
+namespace Kayou::Memory
 {
     enum class MemoryTag : uint8_t
     {

@@ -14,7 +14,7 @@
 
 
 
-namespace Kayou
+namespace Kayou::Memory
 {
     template <typename Derived>
     class TrackedAllocator
@@ -41,22 +41,22 @@ namespace Kayou
 
             assert(std::has_single_bit(memAlignment) && "memAlignment must be a power of 2");
 
-            const std::size_t totalSize = size + sizeof(AllocationHeader) + memAlignment - 1;
+            const std::size_t totalSize = size + sizeof(Internal::AllocationHeader) + memAlignment - 1;
             void* rawPtr = m_derived.Alloc(totalSize, alignof(std::max_align_t));
             if (rawPtr == nullptr)
                 return nullptr;
 
             const std::uintptr_t rawAddress = reinterpret_cast<std::uintptr_t>(rawPtr);
-            const std::uintptr_t afterHeader = rawAddress + sizeof(AllocationHeader);
+            const std::uintptr_t afterHeader = rawAddress + sizeof(Internal::AllocationHeader);
             const std::uintptr_t userAddress = AlignForward(afterHeader, memAlignment);
 
-            AllocationHeader* header = reinterpret_cast<AllocationHeader*>(userAddress - sizeof(AllocationHeader));
+            Internal::AllocationHeader* header = reinterpret_cast<Internal::AllocationHeader*>(userAddress - sizeof(Internal::AllocationHeader));
             header->size = size;
             header->tag = tag;
             header->adjustment = static_cast<std::uint32_t>(userAddress - rawAddress);
 
         #ifdef KAYOU_DEBUG
-            header->magic = kAllocationHeaderMagic;
+            header->magic = Internal::kAllocationHeaderMagic;
         #endif
 
             void* userPtr = reinterpret_cast<void*>(userAddress);
@@ -74,10 +74,10 @@ namespace Kayou
             if (ptr == nullptr)
                 return;
 
-            const AllocationHeader* header = GetAllocationHeader(ptr);
+            const Internal::AllocationHeader* header = Internal::GetAllocationHeader(ptr);
 
             #ifdef KAYOU_DEBUG
-            assert(header->magic == kAllocationHeaderMagic && "Allocation header corrupted or invalid pointer");
+            assert(header->magic == Internal::kAllocationHeaderMagic && "Allocation header corrupted or invalid pointer");
             #endif
 
             const std::uintptr_t userAddress = reinterpret_cast<std::uintptr_t>(ptr);
@@ -85,7 +85,7 @@ namespace Kayou
             const MemoryTag tag = header->tag;
             const std::uint32_t adjustment = header->adjustment;
 
-            assert(adjustment >= sizeof(AllocationHeader) && "Invalid allocation header adjustment");
+            assert(adjustment >= sizeof(Internal::AllocationHeader) && "Invalid allocation header adjustment");
 
             void* rawPtr = reinterpret_cast<void*>(userAddress - adjustment);
             assert(rawPtr != nullptr && "Reconstructed raw pointer is invalid");
@@ -163,7 +163,7 @@ namespace Kayou
         inline void RemoveTrackedAllocation(void* ptr, const std::size_t size, const MemoryTag tag)
         {
             #ifdef KAYOU_DEBUG
-            AllocationHeader* header = GetAllocationHeader(ptr);
+            Internal::AllocationHeader* header = Internal::GetAllocationHeader(ptr);
             header->magic = 0u;
             #endif
 

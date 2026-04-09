@@ -4,15 +4,15 @@
 #pragma once
 
 #include <cstddef>
-#include <cstdint>
+#include <cstdint>      // GCC std::uint32_t
+
+#include "MemoryTracker.hpp"
 
 
+enum class MemoryTag : uint8_t;
 
-namespace Kayou::Internal
+namespace Kayou::Memory::Internal
 {
-    enum class MemoryTag : uint8_t;
-
-
     struct AllocationHeader
     {
         std::size_t size;
