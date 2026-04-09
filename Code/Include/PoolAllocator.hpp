@@ -1,5 +1,7 @@
 #pragma once
+
 #include <cstddef>
+
 
 
 namespace Kayou
@@ -15,7 +17,7 @@ namespace Kayou
         void Reset();
         void PrintUsage() const;
 
-        [[nodiscard]] inline size_t GetObjectSize() const { return m_objectSize; }
+        [[nodiscard]] inline size_t GetBlockSize() const { return m_blockCapacity; }
         [[nodiscard]] inline size_t GetObjectCount() const { return m_objectCount; }
         [[nodiscard]] inline size_t GetAlignment() const { return m_alignment; }
         [[nodiscard]] inline size_t GetUsedBlocks() const { return m_usedBlocks; }
@@ -41,8 +43,8 @@ namespace Kayou
         std::byte* m_start = nullptr;
         FreeNode* m_freeList = nullptr;
 
-        std::size_t m_objectSize = 0;    // Requested size
-        std::size_t m_blockSize = 0;     // Real (aligned) block size
+        std::size_t m_blockCapacity = 0;    // Maximum size accepted by this pool
+        std::size_t m_blockSize = 0;        // Real (aligned) block size
         std::size_t m_objectCount = 0;
         std::size_t m_alignment = 0;
         std::size_t m_totalSize = 0;

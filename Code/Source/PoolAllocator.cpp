@@ -6,6 +6,11 @@
 #include <cstdint>      // GCC std::uintptr_t
 #include <cstdio>
 
+#ifndef _WIN32
+#include <cstdlib>      // GCC/CLang std::free & posix_memalign
+#endif
+
+
 
 namespace Kayou
 {
@@ -21,7 +26,7 @@ namespace Kayou
         assert(objectCount > 0 && "PoolAllocator objectCount must be > 0");
         assert(std::has_single_bit(memAlignment) && "PoolAllocator alignment must be a power of 2");
 
-        m_objectSize = objectSize;
+        m_blockCapacity = objectSize;
         m_objectCount = objectCount;
         m_alignment = memAlignment;
 
@@ -30,15 +35,15 @@ namespace Kayou
         m_blockSize = AlignUp(minBlockSize, memAlignment);
         m_totalSize = m_blockSize * m_objectCount;
 
-    #ifdef _WIN32
+        #ifdef _WIN32
         m_start = static_cast<std::byte*>(_aligned_malloc(m_totalSize, m_alignment));
-    #else
+        #else
         void* ptr = nullptr;
         if (posix_memalign(&ptr, m_alignment, m_totalSize) != 0)
             ptr = nullptr;
 
         m_start = static_cast<std::byte*>(ptr);
-    #endif
+        #endif
 
         assert(m_start && "PoolAllocator allocation failed");
 
@@ -48,11 +53,11 @@ namespace Kayou
 
     PoolAllocator::~PoolAllocator()
     {
-    #ifdef _WIN32
+        #ifdef _WIN32
         _aligned_free(m_start);
-    #else
+        #else
         std::free(m_start);
-    #endif
+        #endif
 
         m_start = nullptr;
         m_freeList = nullptr;
@@ -80,11 +85,12 @@ namespace Kayou
         assert(std::has_single_bit(memAlignment) && "PoolAllocator alignment must be a power of 2");
 
         // Fixed-size pool (can't allocate above the pool's capacity)
-        if (size > m_objectSize)
+        if (size > m_blockCapacity)
             return nullptr;
 
         // Can't allocate if desired alignment is above the pool's alignment
-        assert(memAlignment <= m_alignment && "PoolAllocator can't accept alignment");
+        if (memAlignment > m_alignment)
+            return nullptr;
 
         if (m_freeList == nullptr)
             return nullptr;
@@ -122,6 +128,7 @@ namespace Kayou
     }
 
 
+    // Note that InitFreeList() does not reset m_peakBlocks
     void PoolAllocator::Reset()
     {
         InitFreeList();
