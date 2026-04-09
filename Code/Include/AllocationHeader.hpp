@@ -1,9 +1,14 @@
+/// Header used internally to debug allocations and store header information
+/// This should not be used by anything outside KAlloc
+
 #pragma once
+
 #include <cstddef>
 #include <cstdint>
 
 
-namespace Kayou
+
+namespace Kayou::Internal
 {
     enum class MemoryTag : uint8_t;
 
