@@ -16,12 +16,6 @@
 namespace Kayou::Memory
 {
 
-    std::size_t LinearAllocator::AlignForward(const std::size_t ptrAddress, const std::size_t memAlignment)
-    {
-        return (ptrAddress + (memAlignment - 1)) & ~ (memAlignment - 1);
-    }
-
-
     LinearAllocator::LinearAllocator(std::size_t size, std::size_t memAlignment)
     {
         assert(std::has_single_bit(memAlignment) && "Alignment must be a power of 2!");

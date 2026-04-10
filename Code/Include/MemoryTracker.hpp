@@ -4,6 +4,8 @@
 #include <atomic>
 #include <cstdint>
 
+#include "Utils/Utils.hpp"
+
 
 #ifdef KAYOU_USE_TRACY
     #include "tracy/Tracy.hpp"

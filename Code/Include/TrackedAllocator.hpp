@@ -34,7 +34,7 @@ namespace Kayou::Memory
         /// @param tag [OPTIONAL] A tag used to differentiate allocation blocs - Defaults to MemoryTag::General
         /// @param memAlignment The desired memory alignment (must always be a multiple-of-two)
         /// @return A pointer to the new Allocator
-        inline void* Alloc(std::size_t size, MemoryTag tag = MemoryTag::General, const std::size_t memAlignment = alignof(std::max_align_t))
+        KAYOU_ALWAYS_INLINE void* Alloc(std::size_t size, MemoryTag tag = MemoryTag::General, const std::size_t memAlignment = alignof(std::max_align_t))
         {
             if (size == 0)
                 return nullptr;
@@ -69,7 +69,7 @@ namespace Kayou::Memory
         }
 
 
-        inline void Free(void* ptr) requires FreeableAllocator<Derived>
+        KAYOU_ALWAYS_INLINE void Free(void* ptr) requires FreeableAllocator<Derived>
         {
             if (ptr == nullptr)
                 return;
@@ -111,7 +111,7 @@ namespace Kayou::Memory
         /// Function used to reset the linear allocator
         ///     Because, by concept, a Linear Allocator will free the entire allocated block,
         ///     This will replace any Free() function
-        inline void Reset() requires ResettableAllocator<Derived>
+        KAYOU_ALWAYS_INLINE void Reset() requires ResettableAllocator<Derived>
         {
             for (const ActiveAllocation& alloc : m_activeAllocations)
                 RemoveTrackedAllocation(alloc.ptr, alloc.size, alloc.tag);
@@ -122,7 +122,7 @@ namespace Kayou::Memory
 
 
         /// Function used to print the allocator's usage
-        inline void PrintUsage() const requires PrintableAllocator<Derived>
+        KAYOU_ALWAYS_INLINE void PrintUsage() const requires PrintableAllocator<Derived>
         {
             m_derived.PrintUsage();
         }
@@ -130,7 +130,7 @@ namespace Kayou::Memory
 
         /// Non-const getter to access an allocator
         /// @return The desired allocator (not const)
-        [[nodiscard]] inline Derived& GetAllocator()
+        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE Derived& GetAllocator()
         {
             return m_derived;
         }
@@ -138,7 +138,7 @@ namespace Kayou::Memory
 
         /// Const getter to access an allocator
         /// @return The desired allocator (const)
-        [[nodiscard]] inline const Derived& GetAllocator() const
+        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE const Derived& GetAllocator() const
         {
             return m_derived;
         }
@@ -154,13 +154,13 @@ namespace Kayou::Memory
         };
 
 
-        inline static std::uintptr_t AlignForward(const std::uintptr_t address, const std::size_t memAlignment)
+        KAYOU_ALWAYS_INLINE static std::uintptr_t AlignForward(const std::uintptr_t address, const std::size_t memAlignment)
         {
             return (address + (memAlignment - 1)) & ~(memAlignment - 1);
         }
 
 
-        inline void RemoveTrackedAllocation(void* ptr, const std::size_t size, const MemoryTag tag)
+        KAYOU_ALWAYS_INLINE void RemoveTrackedAllocation(void* ptr, const std::size_t size, const MemoryTag tag)
         {
             #ifdef KAYOU_DEBUG
             Internal::AllocationHeader* header = Internal::GetAllocationHeader(ptr);

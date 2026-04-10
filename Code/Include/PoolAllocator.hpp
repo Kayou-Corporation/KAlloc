@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <vector>
 
+#include "Utils/Utils.hpp"
 
 
 namespace Kayou::Memory
@@ -18,14 +19,14 @@ namespace Kayou::Memory
         void Reset();
         void PrintUsage() const;
 
-        [[nodiscard]] inline size_t GetRawBlockCapacity() const { return m_blockCapacity; }
-        [[nodiscard]] inline size_t GetBlockStride() const { return m_blockStride; }
-        [[nodiscard]] inline size_t GetObjectCount() const { return m_objectCount; }
-        [[nodiscard]] inline size_t GetAlignment() const { return m_alignment; }
-        [[nodiscard]] inline size_t GetUsedBlocks() const { return m_usedBlocks; }
-        [[nodiscard]] inline size_t GetFreeBlocks() const { return m_objectCount - m_usedBlocks; }
-        [[nodiscard]] inline size_t GetPeakBlocks() const { return m_peakBlocks; }
-        [[nodiscard]] inline size_t GetTotalSize() const { return m_totalSize; }
+        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE size_t GetRawBlockCapacity() const { return m_blockCapacity; }
+        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE size_t GetBlockStride() const { return m_blockStride; }
+        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE size_t GetObjectCount() const { return m_objectCount; }
+        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE size_t GetAlignment() const { return m_alignment; }
+        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE size_t GetUsedBlocks() const { return m_usedBlocks; }
+        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE size_t GetFreeBlocks() const { return m_objectCount - m_usedBlocks; }
+        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE size_t GetPeakBlocks() const { return m_peakBlocks; }
+        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE size_t GetTotalSize() const { return m_totalSize; }
 
         PoolAllocator(const PoolAllocator&) = delete;
         PoolAllocator(PoolAllocator&&) = delete;

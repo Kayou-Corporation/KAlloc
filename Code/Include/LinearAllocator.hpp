@@ -1,6 +1,7 @@
 #pragma once
 
 #include "MemoryAllocator.hpp"
+#include "Utils/Utils.hpp"
 
 
 namespace Kayou::Memory
@@ -31,19 +32,19 @@ namespace Kayou::Memory
 
         /// Getter for the used size
         /// @return The used size of the allocator
-        [[nodiscard]] inline std::size_t GetUsedSize() const { return m_usedSize; }
+        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE std::size_t GetUsedSize() const { return m_usedSize; }
 
         /// Getter for the offset (memory alignment)
         /// @return The current offset (alignment) of the allocator
-        [[nodiscard]] inline std::size_t GetOffset() const { return m_offset; }
+        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE std::size_t GetOffset() const { return m_offset; }
 
         /// Getter for the peak allocation
         /// @return the current peak allocation value
-        [[nodiscard]] inline std::size_t GetPeakSize() const { return m_peakSize; }
+        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE std::size_t GetPeakSize() const { return m_peakSize; }
 
         /// Getter for the total allocator size
         /// @return The allocator's total size
-        [[nodiscard]] inline std::size_t GetTotalSize() const { return m_totalSize; }
+        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE std::size_t GetTotalSize() const { return m_totalSize; }
 
 
     private:
@@ -52,7 +53,10 @@ namespace Kayou::Memory
         /// @param ptrAddress The pointer's address
         /// @param memAlignment The desired memory alignment (always a multiple of 2)
         /// @return The new address for the pointer
-        static std::size_t AlignForward(std::size_t ptrAddress, std::size_t memAlignment);
+        KAYOU_ALWAYS_INLINE static std::size_t AlignForward(std::size_t ptrAddress, std::size_t memAlignment)
+        {
+            return (ptrAddress + (memAlignment - 1)) & ~ (memAlignment - 1);
+        }
 
         std::byte* m_start = nullptr;
         std::size_t m_offset = 0;
