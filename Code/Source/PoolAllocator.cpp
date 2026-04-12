@@ -34,7 +34,7 @@ namespace Kayou::Memory
     {
         assert(blockCapacity > 0 && "PoolAllocator blockCapacity must be > 0");
         assert(objectCount > 0 && "PoolAllocator objectCount must be > 0");
-        assert(std::has_single_bit(memAlignment) && "PoolAllocator alignment must be a power of 2");
+        assert(std::has_single_bit(memAlignment) && "PoolAllocator memAlignment must be a power of 2");
 
         m_blockCapacity = blockCapacity;
         m_objectCount = objectCount;
@@ -94,11 +94,11 @@ namespace Kayou::Memory
 
     void* PoolAllocator::Alloc(const std::size_t size, const std::size_t memAlignment)
     {
-        assert(std::has_single_bit(memAlignment) && "PoolAllocator alignment must be a power of 2");
-
         // Fixed-size pool (can't allocate above the pool's capacity)
-        if (size > m_blockCapacity)
+        if (size <= 0 || size > m_blockCapacity)
             return nullptr;
+
+        assert(std::has_single_bit(memAlignment) && "PoolAllocator alignment must be a power of 2");
 
         // Can't allocate if desired alignment is above the pool's alignment
         if (memAlignment > m_alignment)
