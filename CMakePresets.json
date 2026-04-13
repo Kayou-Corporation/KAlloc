@@ -133,7 +133,7 @@
     {
       "name": "Clang",
       "inherits": "conf-windows-common",
-      "generator": "Ninja Multi-Config",
+      "generator": "Ninja",
       "cacheVariables": {
         "CMAKE_CXX_COMPILER": "clang++$env{clang_compiler_v}"
       },
@@ -144,7 +144,7 @@
       "inherits": "conf-windows-common",
       "displayName": "GCC",
       "description": "Compilers: C=gcc, CXX=g++",
-      "generator": "Ninja Multi-Config",
+      "generator": "Ninja",
       "binaryDir": "${sourceDir}/TEMP/${presetName}",
       "cacheVariables": {
         "CMAKE_CXX_COMPILER": "g++$env{gcc_compiler_v}"
