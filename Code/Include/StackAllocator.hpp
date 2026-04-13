@@ -17,6 +17,8 @@ namespace Kayou::Memory
         void Reset();
         void PrintUsage() const;
 
+        KAYOU_ALWAYS_INLINE void Pop(void* ptr) { Free(ptr); }
+
         KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE std::size_t GetUsedSize() const { return m_usedSize; }
         KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE std::size_t GetPeakSize() const { return m_peakSize; }
         KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE std::size_t GetTotalSize() const { return m_totalSize; }
@@ -29,9 +31,14 @@ namespace Kayou::Memory
 
 
     private:
+        #ifdef KAYOU_DEBUG
+        const std::uint32_t kStackAllocationHeaderMagic = 0xBAADF00Du;
+        #endif
+
         struct AllocationHeader
         {
             std::size_t previousOffset;
+            std::size_t allocationOffset;
 
             #ifdef KAYOU_DEBUG
             std::uint32_t magic;

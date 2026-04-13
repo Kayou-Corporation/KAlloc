@@ -1,12 +1,21 @@
 #include "StackAllocator.hpp"
 
+#include <algorithm>
 #include <bit>
 #include <cassert>
+#include <cstdio>
+
+#ifndef _WIN32
+#include <cstdlib>
+#else
+#include <malloc.h>
+#endif
+
 
 
 namespace Kayou::Memory
 {
-    std::size_t StackAllocator::AlignForward(std::size_t address, std::size_t memAlignment)
+    std::size_t StackAllocator::AlignForward(const std::size_t address, const std::size_t memAlignment)
     {
         return (address + (memAlignment - 1)) & ~(memAlignment - 1);
     }
@@ -63,26 +72,70 @@ namespace Kayou::Memory
 
         assert(std::has_single_bit(memAlignment) && "StackAllocator alignment must be a power of 2");
 
-        // Can't allocate if desired alignment is above the pool's alignment
+        // Can't allocate if desired alignment is above the stack allocator's alignment
         if (memAlignment > m_alignment)
             return nullptr;
 
-        std::uintptr_t currentAddress = reinterpret_cast<std::uintptr_t>(m_start) + m_offset;
+        const std::uintptr_t currentAddress = reinterpret_cast<std::uintptr_t>(m_start) + m_offset;
+        const std::uintptr_t afterHeader = currentAddress + sizeof(AllocationHeader);
+        const std::uintptr_t userAddress = AlignForward(afterHeader, memAlignment);
+
+        const std::size_t newOffset = static_cast<std::size_t>((userAddress - reinterpret_cast<std::uintptr_t>(m_start)) + size);
+        if (newOffset > m_totalSize)
+            return nullptr;
+
+        AllocationHeader* header = reinterpret_cast<AllocationHeader*>(userAddress - sizeof(AllocationHeader));
+        header->previousOffset = m_offset;
+        header->allocationOffset = newOffset;
+
+        #ifdef KAYOU_DEBUG
+        header->magic = kStackAllocationHeaderMagic;
+        #endif
+
+        m_offset = newOffset;
+        m_usedSize = m_offset;
+        m_peakSize = std::max(m_peakSize, m_usedSize);
+
+        return reinterpret_cast<void*>(userAddress);
     }
 
 
     void StackAllocator::Free(void* ptr)
     {
+        if (ptr == nullptr)
+            return;
+
+        const std::uintptr_t ptrAddress = reinterpret_cast<std::uintptr_t>(ptr);
+        const std::uintptr_t startAddress = reinterpret_cast<std::uintptr_t>(m_start);
+        const std::uintptr_t endAddress = startAddress + m_totalSize;
+
+        assert(ptrAddress >= startAddress && ptrAddress < endAddress && "Pointer does not belong to this stack allocator");
+
+        AllocationHeader* header = reinterpret_cast<AllocationHeader*>(ptrAddress - sizeof(AllocationHeader));
+
+        #ifdef KAYOU_DEBUG
+        assert(header->magic == kStackAllocationHeaderMagic && "Invalid or corrupted stack allocation header");
+        assert(header->allocationOffset == m_offset && "StackAllocator::Free must follow LIFO order");
+        header->magic = 0u;
+        #endif
+
+
+        m_offset = header->previousOffset;
+        m_usedSize = m_offset;
     }
 
 
     void StackAllocator::Reset()
     {
+        m_offset = 0;
+        m_usedSize = 0;
+        m_peakSize = 0;
     }
 
 
     void StackAllocator::PrintUsage() const
     {
+        printf("Stack Allocator: %zu bytes used (offset = %zu, peak = %zu) / %zu total\n", m_usedSize, m_offset, m_peakSize, m_totalSize);
     }
 
 }
