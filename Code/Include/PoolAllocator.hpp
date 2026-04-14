@@ -78,12 +78,6 @@ namespace Kayou::Memory
             Used    = 1
         };
 
-        /// @brief Internal helper function used to align the size
-        /// @param size The size to align
-        /// @param memAlignment The desired memory alignment (always a multiple of 2)
-        /// @return The new address for the pointer
-        static size_t AlignUp(size_t size, size_t memAlignment);
-
         /// @brief Helper function used to retrieve the block index of the given pointer
         /// @param ptr The selected pointer
         /// @return The index of the block matching the specified pointer

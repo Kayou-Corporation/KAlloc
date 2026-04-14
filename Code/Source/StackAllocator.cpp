@@ -23,7 +23,7 @@ namespace Kayou::Memory
         assert(size > 0 && "StackAllocator size must be > 0");
         assert(std::has_single_bit(memAlignment) && "StackAllocator memAlignment must be power of 2");
 
-        const std::size_t alignedSize = Internal::AlignForward(size, memAlignment);
+        const std::size_t alignedSize = Internal::AlignUp(size, memAlignment);
 
         #ifdef _WIN32
         m_start = static_cast<std::byte*>(_aligned_malloc(alignedSize, memAlignment));

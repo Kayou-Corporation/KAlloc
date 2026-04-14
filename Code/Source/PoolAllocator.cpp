@@ -6,6 +6,8 @@
 #include <cstdint>      // GCC std::uint32_t & std::uintptr_t
 #include <cstdio>
 
+#include "Utils/MemoryUtils.h"
+
 #ifndef _WIN32
 #include <cstdlib>      // GCC/CLang std::free & posix_memalign
 #endif
@@ -14,11 +16,6 @@
 
 namespace Kayou::Memory
 {
-    std::size_t PoolAllocator::AlignUp(const std::size_t size, const std::size_t memAlignment)
-    {
-        return (size + (memAlignment - 1)) & ~(memAlignment - 1);
-    }
-
 
     std::size_t PoolAllocator::GetBlockIndex(const void* ptr) const
     {
@@ -43,7 +40,7 @@ namespace Kayou::Memory
 
         // A memory block must hold the object and a free list pointer when available
         const std::size_t minBlockSize = std::max(blockCapacity, sizeof(FreeNode));
-        m_blockStride = AlignUp(minBlockSize, memAlignment);
+        m_blockStride = Internal::AlignUp(minBlockSize, memAlignment);
         m_totalSize = m_blockStride * m_objectCount;
 
         #ifdef _WIN32
