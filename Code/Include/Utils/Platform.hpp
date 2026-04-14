@@ -1,13 +1,11 @@
 /// Cross-Platform / Compiler / Architecture detection
-///
 #pragma once
 
-#include <cstdint>
+#include <cstdint>      // GCC std::uint32_t & std::uintptr_t
 
 
-///
+
 /// Compiler detection
-///
 #if defined(__clang__)
     #define KAYOU_COMPILER_CLANG 1
     #define KAYOU_COMPILER_NAME "Clang"
@@ -26,9 +24,7 @@
 #endif
 
 
-///
 /// Platform detection
-///
 #if defined(_WIN32) || defined(_WIN64)
     #define KAYOU_PLATFORM_WINDOWS 1
     #define KAYOU_PLATFORM_NAME "Windows"
@@ -50,9 +46,7 @@
 #endif
 
 
-///
 /// Architecture detection
-///
 #if defined(__x86_64__) || defined(_M_X64)
     #define KAYOU_ARCH_X64 1
     #define KAYOU_ARCH_NAME "x86_64"
@@ -71,9 +65,7 @@
 #endif
 
 
-///
 /// Build configuration
-///
 #if defined(NDEBUG)
     #define KAYOU_BUILD_RELEASE 1
 #else
@@ -81,9 +73,7 @@
 #endif
 
 
-///
 /// Compile-time helper constants
-///
 namespace Kayou::Utils::Platform
 {
     /// Compiler name (string literal)

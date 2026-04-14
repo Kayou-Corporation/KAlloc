@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <bit>
 #include <cassert>
-#include <cstdint>      // GCC std::uintptr_t
+#include <cstdint>      // GCC std::uint32_t & std::uintptr_t
 #include <cstdio>
 
 #ifndef _WIN32
@@ -34,7 +34,7 @@ namespace Kayou::Memory
     {
         assert(blockCapacity > 0 && "PoolAllocator blockCapacity must be > 0");
         assert(objectCount > 0 && "PoolAllocator objectCount must be > 0");
-        assert(std::has_single_bit(memAlignment) && "PoolAllocator memAlignment must be a power of 2");
+        assert(std::has_single_bit(memAlignment) && "PoolAllocator memAlignment must be power of 2");
 
         m_blockCapacity = blockCapacity;
         m_objectCount = objectCount;
@@ -72,6 +72,11 @@ namespace Kayou::Memory
 
         m_start = nullptr;
         m_freeList = nullptr;
+        m_blockCapacity = 0;
+        m_blockStride = 0;
+        m_objectCount = 0;
+        m_alignment = 0;
+        m_totalSize = 0;
         m_usedBlocks = 0;
         m_peakBlocks = 0;
     }
@@ -94,16 +99,17 @@ namespace Kayou::Memory
 
     void* PoolAllocator::Alloc(const std::size_t size, const std::size_t memAlignment)
     {
-        // Fixed-size pool (can't allocate above the pool's capacity)
+        // Fixed-size pool: allocation fails if size exceeds block capacity
         if (size == 0 || size > m_blockCapacity)
             return nullptr;
 
-        assert(std::has_single_bit(memAlignment) && "PoolAllocator alignment must be a power of 2");
+        assert(std::has_single_bit(memAlignment) && "PoolAllocator memAlignment must be power of 2");
 
         // Can't allocate if desired alignment is above the pool's alignment
         if (memAlignment > m_alignment)
             return nullptr;
 
+        // Pool exhausted
         if (m_freeList == nullptr)
             return nullptr;
 

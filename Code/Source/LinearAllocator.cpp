@@ -3,9 +3,11 @@
 #include <algorithm>
 #include <bit>
 #include <cassert>
-#include <cstdint>      // std::uintptr_t
+#include <cstdint>      // GCC std::uint32_t & std::uintptr_t
 #include <cstdio>
 #include <stdexcept>
+
+#include "Utils/MemoryUtils.h"
 
 #ifndef _WIN32
     #include <cstdlib>
@@ -18,8 +20,9 @@ namespace Kayou::Memory
 
     LinearAllocator::LinearAllocator(std::size_t size, std::size_t memAlignment)
     {
-        assert(std::has_single_bit(memAlignment) && "Alignment must be a power of 2!");
-        size = AlignForward(size, memAlignment);
+        assert(size > 0 && "LinearAllocator size must be > 0");
+        assert(std::has_single_bit(memAlignment) && "LinearAllocator memAlignment must be power of 2!");
+        size = Internal::AlignForward(size, memAlignment);
 
         #ifdef _WIN32
         m_start = static_cast<std::byte*>(_aligned_malloc(size, memAlignment));
@@ -47,12 +50,19 @@ namespace Kayou::Memory
         #endif
 
         m_start = nullptr;
+        m_offset = 0;
+        m_usedSize = 0;
+        m_peakSize = 0;
+        m_totalSize = 0;
     }
 
 
     void* LinearAllocator::Alloc(const std::size_t size, const std::size_t memAlignment)
     {
-        assert(std::has_single_bit(memAlignment) && "Alignment must be power of 2!");
+        if (size == 0)
+            return nullptr;
+
+        assert(std::has_single_bit(memAlignment) && "LinearAllocator memAlignment must be power of 2!");
 
         const std::uintptr_t currentAddress = reinterpret_cast<std::uintptr_t>(m_start) + m_offset;
         const std::uintptr_t alignedAddress = (currentAddress + (memAlignment - 1)) & ~(memAlignment - 1);

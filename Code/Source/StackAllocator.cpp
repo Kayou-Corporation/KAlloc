@@ -4,6 +4,9 @@
 #include <bit>
 #include <cassert>
 #include <cstdio>
+#include <cstdint>      // GCC std::uint32_t & std::uintptr_t
+
+#include "Utils/MemoryUtils.h"
 
 #ifndef _WIN32
 #include <cstdlib>
@@ -15,18 +18,12 @@
 
 namespace Kayou::Memory
 {
-    std::size_t StackAllocator::AlignForward(const std::size_t address, const std::size_t memAlignment)
-    {
-        return (address + (memAlignment - 1)) & ~(memAlignment - 1);
-    }
-
-
     StackAllocator::StackAllocator(const std::size_t size, const std::size_t memAlignment)
     {
         assert(size > 0 && "StackAllocator size must be > 0");
-        assert(std::has_single_bit(memAlignment) && "StackAllocator memAlignment must be a power of 2");
+        assert(std::has_single_bit(memAlignment) && "StackAllocator memAlignment must be power of 2");
 
-        const std::size_t alignedSize = AlignForward(size, memAlignment);
+        const std::size_t alignedSize = Internal::AlignForward(size, memAlignment);
 
         #ifdef _WIN32
         m_start = static_cast<std::byte*>(_aligned_malloc(alignedSize, memAlignment));
@@ -70,15 +67,15 @@ namespace Kayou::Memory
         if (size == 0)
             return nullptr;
 
-        assert(std::has_single_bit(memAlignment) && "StackAllocator alignment must be a power of 2");
+        assert(std::has_single_bit(memAlignment) && "StackAllocator alignment must be power of 2");
 
-        // Can't allocate if desired alignment is above the stack allocator's alignment
+        // Requested alignment not supported by this allocator
         if (memAlignment > m_alignment)
             return nullptr;
 
         const std::uintptr_t currentAddress = reinterpret_cast<std::uintptr_t>(m_start) + m_offset;
         const std::uintptr_t afterHeader = currentAddress + sizeof(AllocationHeader);
-        const std::uintptr_t userAddress = AlignForward(afterHeader, memAlignment);
+        const std::uintptr_t userAddress = Internal::AlignForward(afterHeader, memAlignment);
 
         const std::size_t newOffset = static_cast<std::size_t>((userAddress - reinterpret_cast<std::uintptr_t>(m_start)) + size);
         if (newOffset > m_totalSize)
@@ -122,6 +119,12 @@ namespace Kayou::Memory
 
         m_offset = header->previousOffset;
         m_usedSize = m_offset;
+    }
+
+
+    void StackAllocator::Pop(void* ptr)
+    {
+        Free(ptr);
     }
 
 

@@ -4,14 +4,14 @@
 #include <bit>
 #include <cassert>
 #include <cstddef>
-#include <cstdint>
+#include <cstdint>      // GCC std::uint32_t & std::uintptr_t
 #include <utility>
 #include <vector>
 
 #include "AllocationHeader.hpp"
 #include "MemoryAllocator.hpp"
 #include "MemoryTracker.hpp"
-
+#include "Utils/MemoryUtils.h"
 
 
 namespace Kayou::Memory
@@ -39,7 +39,7 @@ namespace Kayou::Memory
             if (size == 0)
                 return nullptr;
 
-            assert(std::has_single_bit(memAlignment) && "memAlignment must be a power of 2");
+            assert(std::has_single_bit(memAlignment) && "TrackedAllocator memAlignment must be power of 2");
 
             const std::size_t totalSize = size + sizeof(Internal::AllocationHeader) + memAlignment - 1;
             void* rawPtr = m_derived.Alloc(totalSize, std::max(memAlignment, alignof(std::max_align_t)));
@@ -48,7 +48,7 @@ namespace Kayou::Memory
 
             const std::uintptr_t rawAddress = reinterpret_cast<std::uintptr_t>(rawPtr);
             const std::uintptr_t afterHeader = rawAddress + sizeof(Internal::AllocationHeader);
-            const std::uintptr_t userAddress = AlignForward(afterHeader, memAlignment);
+            const std::uintptr_t userAddress = Internal::AlignForward(afterHeader, memAlignment);
 
             Internal::AllocationHeader* header = reinterpret_cast<Internal::AllocationHeader*>(userAddress - sizeof(Internal::AllocationHeader));
             header->size = size;
@@ -152,13 +152,6 @@ namespace Kayou::Memory
             std::size_t size;
             MemoryTag tag;
         };
-
-
-        KAYOU_ALWAYS_INLINE static std::uintptr_t AlignForward(const std::uintptr_t address, const std::size_t memAlignment)
-        {
-            return (address + (memAlignment - 1)) & ~(memAlignment - 1);
-        }
-
 
         KAYOU_ALWAYS_INLINE void RemoveTrackedAllocation(void* ptr, const std::size_t size, const MemoryTag tag)
         {

@@ -2,7 +2,7 @@
 #include "TrackedAllocator.hpp"
 
 #include <cassert>
-#include <cstdint>
+#include <cstdint>      // GCC std::uint32_t & std::uintptr_t
 #include <cstring>
 #include <iomanip>
 #include <iostream>

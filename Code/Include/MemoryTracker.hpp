@@ -2,7 +2,7 @@
 
 #include <array>
 #include <atomic>
-#include <cstdint>
+#include <cstdint>      // GCC std::uint32_t & std::uintptr_t
 
 
 
