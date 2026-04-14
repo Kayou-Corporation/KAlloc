@@ -77,7 +77,6 @@ namespace Kayou::Memory
     {
         m_offset = 0;
         m_usedSize = 0;
-        m_peakSize = 0;
     }
 
 

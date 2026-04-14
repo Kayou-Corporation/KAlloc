@@ -67,7 +67,7 @@ namespace Kayou::Memory
 
     void* StackAllocator::Alloc(const std::size_t size, const std::size_t memAlignment)
     {
-        if (size <= 0)
+        if (size == 0)
             return nullptr;
 
         assert(std::has_single_bit(memAlignment) && "StackAllocator alignment must be a power of 2");
@@ -129,7 +129,6 @@ namespace Kayou::Memory
     {
         m_offset = 0;
         m_usedSize = 0;
-        m_peakSize = 0;
     }
 
 

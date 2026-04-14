@@ -12,6 +12,11 @@ namespace Kayou::Memory
         explicit StackAllocator(std::size_t size, std::size_t memAlignment = alignof(std::max_align_t));
         ~StackAllocator();
 
+        StackAllocator(const StackAllocator&) = delete;
+        StackAllocator(StackAllocator&&) = delete;
+        StackAllocator& operator=(const StackAllocator&) = delete;
+        StackAllocator& operator=(StackAllocator&&) = delete;
+
         void* Alloc(std::size_t size, std::size_t memAlignment = alignof(std::max_align_t));
         void Free(void* ptr);
         void Reset();
@@ -19,15 +24,10 @@ namespace Kayou::Memory
 
         KAYOU_ALWAYS_INLINE void Pop(void* ptr) { Free(ptr); }
 
-        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE std::size_t GetUsedSize() const { return m_usedSize; }
-        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE std::size_t GetPeakSize() const { return m_peakSize; }
-        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE std::size_t GetTotalSize() const { return m_totalSize; }
-        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE std::size_t GetOffset() const { return m_offset; }
-
-        StackAllocator(const StackAllocator&) = delete;
-        StackAllocator(StackAllocator&&) = delete;
-        StackAllocator& operator=(const StackAllocator&) = delete;
-        StackAllocator& operator=(StackAllocator&&) = delete;
+        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE std::size_t GetUsedSize() const    { return m_usedSize; }
+        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE std::size_t GetPeakSize() const    { return m_peakSize; }
+        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE std::size_t GetTotalSize() const   { return m_totalSize; }
+        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE std::size_t GetOffset() const      { return m_offset; }
 
 
     private:

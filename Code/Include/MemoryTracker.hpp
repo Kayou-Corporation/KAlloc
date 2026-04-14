@@ -4,13 +4,6 @@
 #include <atomic>
 #include <cstdint>
 
-#include "Utils/Utils.hpp"
-
-
-#ifdef KAYOU_USE_TRACY
-    #include "tracy/Tracy.hpp"
-#endif
-
 
 
 namespace Kayou::Memory
@@ -24,7 +17,6 @@ namespace Kayou::Memory
         Audio       =   4,
         COUNT
     };
-
 
 
     class MemoryTracker

@@ -3,7 +3,7 @@
 #---------------------------------------#
 # Which test should be enable (only one can be enabled at once)
 # Options prefixed with `T` are TrackedAllocators
-set(KALLOC_TEST "TSTACK" CACHE STRING "Allocator test to run")
+set(KALLOC_TEST "TLINEAR" CACHE STRING "Allocator test to run")
 set_property(CACHE KALLOC_TEST PROPERTY STRINGS TLINEAR TPOOL STACK TSTACK)
 
 if (KALLOC_TEST STREQUAL "TLINEAR")

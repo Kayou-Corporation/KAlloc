@@ -4,12 +4,13 @@
 #include "TrackedAllocator.hpp"
 #include "LinearAllocator.hpp"
 #include "PoolAllocator.hpp"
-#include "MemoryTracker.hpp"
 
 
-
+#pragma region tests
 int main()
 {
+    using namespace Kayou;
+
     std::cout << "===== KAlloc Test =====\n\n";
 
     // ---------------------------
