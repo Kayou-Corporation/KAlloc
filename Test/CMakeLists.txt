@@ -2,15 +2,21 @@
 #            BUILD MODE                 #
 #---------------------------------------#
 # Which test should be enable (only one can be enabled at once)
-option(KAYOU_TLINEAR_TEST "Enable Tracked Linear Allocator Tests" OFF)
-option(KAYOU_TPOOL_TEST "Enable Tracked Pool Allocator Tests" ON)
-option(KAYOU_TSTACK_TEST "Enable Tracked Stack Allocator Tests" OFF)
+# Options prefixed with `T` are TrackedAllocators
+set(KALLOC_TEST "TSTACK" CACHE STRING "Allocator test to run")
+set_property(CACHE KALLOC_TEST PROPERTY STRINGS TLINEAR TPOOL STACK TSTACK)
 
-if (KAYOU_TLINEAR_TEST)
+if (KALLOC_TEST STREQUAL "TLINEAR")
     add_executable(KAlloc_TEST "TLinearAllocator.cpp")
-elseif (KAYOU_TPOOL_TEST)
+elseif (KALLOC_TEST STREQUAL "TPOOL")
     add_executable(KAlloc_TEST "TPoolAllocator.cpp")
-endif ()
+elseif (KALLOC_TEST STREQUAL "TSTACK")
+    add_executable(KAlloc_TEST "TStackAllocator.cpp")
+elseif (KALLOC_TEST STREQUAL "STACK")
+    add_executable(KAlloc_TEST "StackAllocator.cpp")
+else()
+    message(FATAL_ERROR "Invalid KQLLOC_TEST value")
+endif()
 
 
 
