@@ -69,7 +69,7 @@ namespace Kayou::Memory
     private:
         struct FreeNode
         {
-            FreeNode* m_next = nullptr;
+            FreeNode* next = nullptr;
         };
 
         enum class BlockState : std::uint8_t

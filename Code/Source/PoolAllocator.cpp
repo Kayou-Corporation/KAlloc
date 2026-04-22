@@ -86,7 +86,7 @@ namespace Kayou::Memory
         for (std::size_t i = 0; i < m_objectCount; ++i)
         {
             FreeNode* node = reinterpret_cast<FreeNode*>(m_start + i * m_blockStride);
-            node->m_next = m_freeList;
+            node->next = m_freeList;
             m_freeList = node;
             m_blockStates[i] = BlockState::Free;
         }
@@ -111,7 +111,7 @@ namespace Kayou::Memory
             return nullptr;
 
         FreeNode* node = m_freeList;
-        m_freeList = node->m_next;
+        m_freeList = node->next;
 
         const std::size_t blockIndex = GetBlockIndex(node);
         assert(blockIndex < m_objectCount && "PoolAllocator block index out of range");
@@ -147,7 +147,7 @@ namespace Kayou::Memory
         m_blockStates[blockIndex] = BlockState::Free;
 
         FreeNode* node = static_cast<FreeNode*>(ptr);
-        node->m_next = m_freeList;
+        node->next = m_freeList;
         m_freeList = node;
 
         assert(m_usedBlocks > 0 && "PoolAllocator::Free is called too many times");

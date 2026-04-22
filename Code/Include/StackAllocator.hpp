@@ -1,4 +1,5 @@
 #pragma once
+
 #include <cstddef>
 
 #include "Utils/Utils.hpp"
@@ -55,19 +56,19 @@ namespace Kayou::Memory
 
 
     private:
-        #ifdef KAYOU_DEBUG
-        const std::uint32_t kStackAllocationHeaderMagic = 0xBAADF00Du;
-        #endif
-
         struct AllocationHeader
         {
-            std::size_t previousOffset;
-            std::size_t allocationOffset;
+            std::size_t previousOffset = 0;
+            std::size_t allocationOffset = 0;
 
             #ifdef KAYOU_DEBUG
-            std::uint32_t magic;
+            std::uint32_t magic = 0;
             #endif
         };
+
+        #ifdef KAYOU_DEBUG
+        inline static constexpr std::uint32_t kStackAllocationHeaderMagic = 0xBAADF00Du;
+        #endif
 
         std::byte* m_start = nullptr;
         std::size_t m_offset = 0;

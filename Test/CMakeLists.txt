@@ -3,8 +3,8 @@
 #---------------------------------------#
 # Which test should be enable (only one can be enabled at once)
 # Options prefixed with `T` are TrackedAllocators
-set(KALLOC_TEST "TLINEAR" CACHE STRING "Allocator test to run")
-set_property(CACHE KALLOC_TEST PROPERTY STRINGS TLINEAR TPOOL STACK TSTACK)
+set(KALLOC_TEST "BENCHMARK" CACHE STRING "Allocator test to run")
+set_property(CACHE KALLOC_TEST PROPERTY STRINGS TLINEAR TPOOL STACK TSTACK FREELIST TFREELIST BENCHMARK)
 
 if (KALLOC_TEST STREQUAL "TLINEAR")
     add_executable(KAlloc_TEST "TLinearAllocator.cpp")
@@ -14,8 +14,14 @@ elseif (KALLOC_TEST STREQUAL "TSTACK")
     add_executable(KAlloc_TEST "TStackAllocator.cpp")
 elseif (KALLOC_TEST STREQUAL "STACK")
     add_executable(KAlloc_TEST "StackAllocator.cpp")
+elseif (KALLOC_TEST STREQUAL "FREELIST")
+    add_executable(KAlloc_TEST "FreeListAllocator.cpp")
+elseif (KALLOC_TEST STREQUAL "TFREELIST")
+    add_executable(KAlloc_TEST "TFreeListAllocator.cpp")
+elseif (KALLOC_TEST STREQUAL "BENCHMARK")
+    add_executable(KAlloc_TEST "Benchmark.cpp")
 else()
-    message(FATAL_ERROR "Invalid KQLLOC_TEST value")
+    message(FATAL_ERROR "Invalid KALLOC_TEST value")
 endif()
 
 
