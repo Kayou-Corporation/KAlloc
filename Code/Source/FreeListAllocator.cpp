@@ -163,14 +163,14 @@ namespace Kayou::Memory
         const std::uintptr_t blockStart = userAddress - header->adjustment;
         const std::size_t blockSize = header->blockSize;
 
+        assert(m_usedSize >= blockSize && "FreeListAllocator::Free underflow");
+        m_usedSize -= blockSize;
+
         FreeBlock* block = reinterpret_cast<FreeBlock*>(blockStart);
         block->size = blockSize;
         block->next = nullptr;
 
         InsertFreeBlock(block);
-
-        assert(m_usedSize >= blockSize && "FreeListAllocator::Free underflow");
-        m_usedSize -= blockSize;
     }
 
 
@@ -209,12 +209,37 @@ namespace Kayou::Memory
         }
 
         block->next = current;
-        if (previous)
+        if (previous != nullptr)
             previous->next = block;
         else
             m_freeList = block;
 
-        MergeAdjacentFreeBlocks();
+        // Try merge with previous
+        if (previous != nullptr)
+        {
+            const std::uintptr_t previousEnd =
+                reinterpret_cast<std::uintptr_t>(previous) + previous->size;
+
+            if (previousEnd == reinterpret_cast<std::uintptr_t>(block))
+            {
+                previous->size += block->size;
+                previous->next = block->next;
+                block = previous;
+            }
+        }
+
+        // Try merge with next
+        if (block->next != nullptr)
+        {
+            const std::uintptr_t blockEnd =
+                reinterpret_cast<std::uintptr_t>(block) + block->size;
+
+            if (blockEnd == reinterpret_cast<std::uintptr_t>(block->next))
+            {
+                block->size += block->next->size;
+                block->next = block->next->next;
+            }
+        }
     }
 
 
