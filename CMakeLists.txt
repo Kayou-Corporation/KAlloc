@@ -106,14 +106,13 @@ set_target_properties(KAlloc PROPERTIES OUTPUT_NAME "${PROJECT_NAME}-${PROJECT_V
 
 
 
-# --------------------------------------- #
-#              ENABLE TESTING             #
-# --------------------------------------- #
-# Enable CTests
+#---------------------------------------#
+#              ENABLE TESTING           #
+#---------------------------------------#
 enable_testing()
 
 option(BUILD_EXECUTABLE "Build an executable to live debug the allocator" ON)
 
 if (BUILD_EXECUTABLE)
     add_subdirectory(Test)
-endif ()
+endif()

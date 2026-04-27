@@ -1,6 +1,12 @@
 #---------------------------------------#
 #            BUILD MODE                 #
 #---------------------------------------#
+
+if (NOT BUILD_EXECUTABLE)
+    unset(KALLOC_TEST CACHE)
+    return()
+endif()
+
 # Which test should be enable (only one can be enabled at once)
 # Options prefixed with `T` are TrackedAllocators
 set(KALLOC_TEST "BENCHMARK" CACHE STRING "Allocator test to run")
@@ -20,11 +26,9 @@ elseif (KALLOC_TEST STREQUAL "TFREELIST")
     add_executable(KAlloc_TEST "TFreeListAllocator.cpp")
 elseif (KALLOC_TEST STREQUAL "BENCHMARK")
     add_executable(KAlloc_TEST "Benchmark.cpp")
-else()
+else ()
     message(FATAL_ERROR "Invalid KALLOC_TEST value")
-endif()
-
-
+endif ()
 
 #---------------------------------------#
 #                COMPILE MODE           #
@@ -37,14 +41,6 @@ if(MSVC)
 else()
     target_compile_options(KAlloc_TEST PUBLIC -Wall -Wextra -Wpedantic -Werror)
 endif()
-
-
-# Build position independent code.
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-
-# Disable C and C++ compiler extensions.
-set(CMAKE_C_EXTENSIONS OFF)
-set(CMAKE_CXX_EXTENSIONS OFF)
 
 target_link_libraries(KAlloc_TEST PRIVATE KAlloc)
 
