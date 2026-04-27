@@ -1,0 +1,73 @@
+name: Build Artifacts
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  release-build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows Clang Release
+            os: windows-latest
+            configure_preset: windows-clang-release
+            build_preset: Windows Clang Release
+            artifact_name: KAlloc-windows-clang-release
+            artifact_path: TEMP/windows-clang-release/**
+
+          - name: Windows GCC Release
+            os: windows-latest
+            configure_preset: windows-gcc-release
+            build_preset: Windows GCC Release
+            artifact_name: KAlloc-windows-gcc-release
+            artifact_path: TEMP/windows-gcc-release/**
+
+          - name: Windows MSVC Release
+            os: windows-latest
+            configure_preset: vs2022
+            build_preset: VS2022 Release
+            artifact_name: KAlloc-windows-msvc-release
+            artifact_path: TEMP/vs2022/**
+
+          - name: Linux Clang Release
+            os: ubuntu-latest
+            configure_preset: unix-clang-release
+            build_preset: Unix Clang Release
+            artifact_name: KAlloc-linux-clang-release
+            artifact_path: TEMP/unix-clang-release/**
+
+          - name: Linux GCC Release
+            os: ubuntu-latest
+            configure_preset: unix-gcc-release
+            build_preset: Unix GCC Release
+            artifact_name: KAlloc-linux-gcc-release
+            artifact_path: TEMP/unix-gcc-release/**
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build clang g++
+
+      - name: Configure
+        run: cmake --preset "${{ matrix.configure_preset }}"
+
+      - name: Build
+        run: cmake --build --preset "${{ matrix.build_preset }}"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: ${{ matrix.artifact_path }}
+          if-no-files-found: error
