@@ -35,8 +35,8 @@ namespace Kayou::Memory
         /// @param tag [OPTIONAL] A tag used to differentiate allocation blocs - Defaults to MemoryTag::General
         static void RemoveAllocation(const void* ptr, std::size_t size, MemoryTag tag = MemoryTag::General);
 
-        /// Internal function called by TrackedAllocator, used to register all allocations internally
-        /// @param tag [OPTIONAL] A tag used to differentiate allocation blocs - Defaults to MemoryTag::General
+        /// Internal function called by TrackedAllocator, used to reset allocation tracking for a single tag
+        /// @param tag [OPTIONAL] The tag whose allocation tracking should be reset - Defaults to MemoryTag::General
         static void ResetAll(MemoryTag tag = MemoryTag::General);
 
         /// Internal function used to print the allocation report into the console
