@@ -75,7 +75,8 @@ namespace Kayou::Memory
         enum class BlockState : std::uint8_t
         {
             Free    = 0,
-            Used    = 1
+            Used    = 1,
+            COUNT
         };
 
         /// @brief Helper function used to retrieve the block index of the given pointer

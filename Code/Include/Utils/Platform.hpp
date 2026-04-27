@@ -104,7 +104,7 @@ namespace Kayou::Utils::Platform
     #endif
 
 
-    /// True if Windows platform
+    /// True if using the Windows platform
     inline constexpr bool IsWindows =
     #if defined(KAYOU_PLATFORM_WINDOWS)
         true;
@@ -113,7 +113,7 @@ namespace Kayou::Utils::Platform
     #endif
 
 
-    /// True if Linux platform
+    /// True if using the Linux platform
     inline constexpr bool IsLinux =
     #if defined(KAYOU_PLATFORM_LINUX)
         true;
@@ -122,7 +122,7 @@ namespace Kayou::Utils::Platform
     #endif
 
 
-    /// True if macOS platform
+    /// True if using the macOS platform
     inline constexpr bool IsMacOS =
     #if defined(KAYOU_PLATFORM_MACOS)
         true;
@@ -148,4 +148,4 @@ namespace Kayou::Utils::Platform
         false;
     #endif
 
-} // namespace Kayou::Utils::Platform
+}

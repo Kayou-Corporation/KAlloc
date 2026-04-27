@@ -31,7 +31,7 @@ namespace Kayou::Memory
 
         /// @brief Function used to register a new allocation
         /// @param size The size of the allocation
-        /// @param tag [OPTIONAL] A tag used to differentiate allocation blocs - Defaults to MemoryTag::General
+        /// @param tag [OPTIONAL] A tag used to differentiate allocation blocks - Defaults to MemoryTag::General
         /// @param memAlignment The desired memory alignment (must always be a multiple-of-two)
         /// @return A pointer to the new Allocator
         KAYOU_ALWAYS_INLINE void* Alloc(std::size_t size, MemoryTag tag = MemoryTag::General, const std::size_t memAlignment = alignof(std::max_align_t))
