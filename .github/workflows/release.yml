@@ -1,0 +1,130 @@
+name: Release
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows Clang Release
+            os: windows-latest
+            configure_preset: windows-clang-release
+            build_preset: Windows Clang Release
+            package_name: KAlloc-windows-clang-release
+            package_path: Builds/Clang/Release
+
+          - name: Windows GCC Release
+            os: windows-latest
+            configure_preset: windows-gcc-release
+            build_preset: Windows GCC Release
+            package_name: KAlloc-windows-gcc-release
+            package_path: Builds/GNU/Release
+
+          - name: Windows MSVC Release
+            os: windows-latest
+            configure_preset: vs2022
+            build_preset: VS2022 Release
+            package_name: KAlloc-windows-msvc-release
+            package_path: Builds/MSVC/Release
+
+          - name: Linux Clang Release
+            os: ubuntu-latest
+            configure_preset: unix-clang-release
+            build_preset: Unix Clang Release
+            package_name: KAlloc-linux-clang-release
+            package_path: Builds/Clang/Release
+
+          - name: Linux GCC Release
+            os: ubuntu-latest
+            configure_preset: unix-gcc-release
+            build_preset: Unix GCC Release
+            package_name: KAlloc-linux-gcc-release
+            package_path: Builds/GNU/Release
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build clang g++
+
+      - name: Configure
+        run: cmake --preset "${{ matrix.configure_preset }}" -DUSE_TRACY=OFF
+
+      - name: Build
+        run: cmake --build --preset "${{ matrix.build_preset }}"
+
+      - name: Package Windows build
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Compress-Archive -Path "${{ matrix.package_path }}/*" -DestinationPath "${{ matrix.package_name }}.zip" -Force
+
+      - name: Package Linux build
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          cd "${{ matrix.package_path }}"
+          zip -r "../../../${{ matrix.package_name }}.zip" .
+
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.package_name }}
+          path: ${{ matrix.package_name }}.zip
+          if-no-files-found: error
+          retention-days: 1
+
+  create-release:
+    name: Create GitHub Release
+    needs: build-release
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download packages
+        uses: actions/download-artifact@v4
+        with:
+          path: release-packages
+          merge-multiple: true
+
+      - name: Create release tag name
+        id: release_info
+        shell: bash
+        run: |
+          echo "tag_name=auto-${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+          echo "release_name=Automated Build ${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ steps.release_info.outputs.tag_name }}
+          name: ${{ steps.release_info.outputs.release_name }}
+          body: |
+            Automated release generated from master.
+
+            Commit: ${{ github.sha }}
+          files: release-packages/*.zip

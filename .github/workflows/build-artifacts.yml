@@ -22,35 +22,35 @@ jobs:
             configure_preset: windows-clang-release
             build_preset: Windows Clang Release
             artifact_name: KAlloc-windows-clang-release
-            artifact_path: TEMP/windows-clang-release/**
+            artifact_path: Builds/Clang/Release/**
 
           - name: Windows GCC Release
             os: windows-latest
             configure_preset: windows-gcc-release
             build_preset: Windows GCC Release
             artifact_name: KAlloc-windows-gcc-release
-            artifact_path: TEMP/windows-gcc-release/**
+            artifact_path: Builds/GNU/Release/**
 
           - name: Windows MSVC Release
             os: windows-latest
             configure_preset: vs2022
             build_preset: VS2022 Release
             artifact_name: KAlloc-windows-msvc-release
-            artifact_path: TEMP/vs2022/**
+            artifact_path: Builds/MSVC/Release/**
 
           - name: Linux Clang Release
             os: ubuntu-latest
             configure_preset: unix-clang-release
             build_preset: Unix Clang Release
             artifact_name: KAlloc-linux-clang-release
-            artifact_path: TEMP/unix-clang-release/**
+            artifact_path: Builds/Clang/Release/**
 
           - name: Linux GCC Release
             os: ubuntu-latest
             configure_preset: unix-gcc-release
             build_preset: Unix GCC Release
             artifact_name: KAlloc-linux-gcc-release
-            artifact_path: TEMP/unix-gcc-release/**
+            artifact_path: Builds/GNU/Release/**
 
     steps:
       - name: Checkout
@@ -76,3 +76,4 @@ jobs:
           name: ${{ matrix.artifact_name }}
           path: ${{ matrix.artifact_path }}
           if-no-files-found: error
+          retention-days: 7
