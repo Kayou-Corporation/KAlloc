@@ -7,7 +7,7 @@
 #include <cstdio>
 #include <stdexcept>
 
-#include "Utils/MemoryUtils.h"
+#include "Utils/MemoryUtils.hpp"
 
 #ifndef _WIN32
     #include <cstdlib>

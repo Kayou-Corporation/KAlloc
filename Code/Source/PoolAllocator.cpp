@@ -6,7 +6,7 @@
 #include <cstdint>      // GCC std::uint32_t & std::uintptr_t
 #include <cstdio>
 
-#include "Utils/MemoryUtils.h"
+#include "Utils/MemoryUtils.hpp"
 
 #ifndef _WIN32
 #include <cstdlib>      // GCC/CLang std::free & posix_memalign

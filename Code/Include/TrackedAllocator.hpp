@@ -11,7 +11,7 @@
 #include "AllocationHeader.hpp"
 #include "MemoryAllocator.hpp"
 #include "MemoryTracker.hpp"
-#include "Utils/MemoryUtils.h"
+#include "Utils/MemoryUtils.hpp"
 
 
 namespace Kayou::Memory
