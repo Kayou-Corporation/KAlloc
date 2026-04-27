@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstddef>      // std::size_t
+
 #include "Utils/Utils.hpp"
 
 #ifdef KAYOU_USE_TRACY
@@ -39,10 +41,10 @@ namespace Kayou::Memory::Profiler
     #define KFrameMark ((void)0)
 
     /// Helper function used when `USE_TRACY` is enabled in the CMakeLists.txt to track allocations inside Tracy
-    void Alloc([[maybe_unused]] const void* ptr, [[maybe_unused]] const size_t size, [[maybe_unused]] const char* tag = "Unspecified") { }
+    KAYOU_ALWAYS_INLINE void Alloc([[maybe_unused]] const void* ptr, [[maybe_unused]] const std::size_t size, [[maybe_unused]] const char* tag = "Unspecified") { }
 
     /// Helper function used when `USE_TRACY` is enabled in the CMakeLists.txt to untrack allocations inside Tracy
-    void Free([[maybe_unused]] const void* ptr, [[maybe_unused]] const char* tag = "Unspecified") { }
+    KAYOU_ALWAYS_INLINE void Free([[maybe_unused]] const void* ptr, [[maybe_unused]] const char* tag = "Unspecified") { }
 
 #endif
 }

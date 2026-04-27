@@ -35,17 +35,17 @@ namespace Kayou::Memory
         /// @brief Function used to print the allocator's usage
         void PrintUsage() const;
 
-        /// @return The used size of the allocator
-        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE std::size_t GetUsedSize() const    { return m_usedSize; }
+        /// @return The size of the memory currently in use, in bytes
+        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE std::size_t GetUsedSize() const            { return m_usedSize; }
 
         /// @return the current peak allocation value
-        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE std::size_t GetPeakSize() const    { return m_peakSize; }
+        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE std::size_t GetPeakSize() const            { return m_peakSize; }
 
-        /// @return The allocator's total size
-        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE std::size_t GetTotalSize() const   { return m_totalSize; }
+        /// @return The total size of the allocator (free and used), in bytes
+        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE std::size_t GetTotalSize() const           { return m_totalSize; }
 
         /// @return The current offset (alignment) of the allocator
-        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE std::size_t GetOffset() const      { return m_offset; }
+        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE std::size_t GetOffset() const              { return m_offset; }
 
 
     private:

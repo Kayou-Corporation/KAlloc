@@ -29,7 +29,7 @@ namespace Kayou::Memory
         TrackedAllocator& operator=(const TrackedAllocator&) = delete;
 
 
-        /// Function used to register a new allocation
+        /// @brief Function used to register a new allocation
         /// @param size The size of the allocation
         /// @param tag [OPTIONAL] A tag used to differentiate allocation blocs - Defaults to MemoryTag::General
         /// @param memAlignment The desired memory alignment (must always be a multiple-of-two)
@@ -70,6 +70,8 @@ namespace Kayou::Memory
         }
 
 
+        /// @brief Function used to free any FreeableAllocator's allocation
+        /// @param ptr Pointer to the allocation to free
         KAYOU_ALWAYS_INLINE void Free(void* ptr) requires FreeableAllocator<Derived>
         {
             if (ptr == nullptr)
@@ -109,9 +111,9 @@ namespace Kayou::Memory
         }
 
 
-        /// Function used to reset the linear allocator
-        ///     Because, by concept, a Linear Allocator will free the entire allocated block,
-        ///     This will replace any Free() function
+        /// @brief Function used to reset the linear allocator
+        ///        Because, by concept, a Linear Allocator will free the entire allocated block,
+        ///        This will replace any Free() function
         KAYOU_ALWAYS_INLINE void Reset() requires ResettableAllocator<Derived>
         {
             for (const ActiveAllocation& alloc : m_activeAllocations)
@@ -122,27 +124,14 @@ namespace Kayou::Memory
         }
 
 
-        /// Function used to print the allocator's usage
-        KAYOU_ALWAYS_INLINE void PrintUsage() const requires PrintableAllocator<Derived>
-        {
-            m_derived.PrintUsage();
-        }
+        /// @brief Function used to print the allocator's usage
+        KAYOU_ALWAYS_INLINE void PrintUsage() const requires PrintableAllocator<Derived>    { m_derived.PrintUsage(); }
 
-
-        /// Non-const getter to access an allocator
         /// @return The desired allocator (not const)
-        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE Derived& GetAllocator()
-        {
-            return m_derived;
-        }
+        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE Derived& GetAllocator()                        { return m_derived; }
 
-
-        /// Const getter to access an allocator
         /// @return The desired allocator (const)
-        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE const Derived& GetAllocator() const
-        {
-            return m_derived;
-        }
+        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE const Derived& GetAllocator() const            { return m_derived; }
 
 
 

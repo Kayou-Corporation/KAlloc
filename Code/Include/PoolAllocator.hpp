@@ -11,7 +11,7 @@ namespace Kayou::Memory
     class PoolAllocator
     {
     public:
-        /// @brief Constructor used to register a new Linear Allocator
+        /// @brief Constructor used to register a new Pool Allocator
         /// @param blockCapacity The desired block's capacity
         /// @param objectCount The number of objects
         /// @param memAlignment [OPTIONAL] The desired memory alignment (must always be a multiple-of-two)
@@ -33,37 +33,37 @@ namespace Kayou::Memory
         /// @param ptr Pointer to allocation to free
         void Free(void* ptr);
 
-        /// @brief Function used to reset the linear allocator
-        /// because, by concept, a Linear Allocator will free the entire allocated block.
-        /// This will replace any Free() function
+        /// @brief Resets the allocator to its initial state by rebuilding the free list
+        ///        All blocks are marked as free, and the internal allocation state is fully reinitialized
+        ///        Does not release memory back to the system
         void Reset();
 
         /// @brief Function used to print the allocator's usage
         void PrintUsage() const;
 
         /// @return The raw capacity (size) of the block
-        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE size_t GetRawBlockCapacity() const     { return m_blockCapacity; }
+        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE size_t GetRawBlockCapacity() const         { return m_blockCapacity; }
 
         /// @return The stride (offset) of the block
-        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE size_t GetBlockStride() const          { return m_blockStride; }
+        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE size_t GetBlockStride() const              { return m_blockStride; }
 
         /// @return The object count inside the block
-        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE size_t GetObjectCount() const          { return m_objectCount; }
+        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE size_t GetObjectCount() const              { return m_objectCount; }
 
         /// @return The memory alignment of the block
-        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE size_t GetAlignment() const            { return m_alignment; }
+        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE size_t GetAlignment() const                { return m_alignment; }
 
         /// @return The number of used blocks
-        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE size_t GetUsedBlocks() const           { return m_usedBlocks; }
+        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE size_t GetUsedBlocks() const               { return m_usedBlocks; }
 
         /// @return The number of free blocks
-        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE size_t GetFreeBlocks() const           { return m_objectCount - m_usedBlocks; }
+        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE size_t GetFreeBlocks() const               { return m_objectCount - m_usedBlocks; }
 
         /// @return The peak block usage
-        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE size_t GetPeakBlocks() const           { return m_peakBlocks; }
+        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE size_t GetPeakBlocks() const               { return m_peakBlocks; }
 
-        /// @return The total available size
-        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE size_t GetTotalSize() const            { return m_totalSize; }
+        /// @return The total size of the allocator (free and used), in bytes
+        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE size_t GetTotalSize() const                { return m_totalSize; }
 
 
     private:
