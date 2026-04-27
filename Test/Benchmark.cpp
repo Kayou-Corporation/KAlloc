@@ -193,7 +193,7 @@ void* AllocRaw(TAllocator& allocator, const std::size_t size, const std::size_t 
         }
     }
 
-    struct alignas(64) GameObject
+    struct GameObject
     {
         std::array<std::byte, 256> payload {};
         std::uint64_t id = 0;

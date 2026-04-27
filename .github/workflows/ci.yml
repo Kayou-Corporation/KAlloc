@@ -54,7 +54,7 @@ jobs:
           sudo apt-get install -y ninja-build clang g++
 
       - name: Configure
-        run: cmake --preset "${{ matrix.configure_preset }}"
+        run: cmake --preset "${{ matrix.configure_preset }}" -DUSE_TRACY=OFF
 
       - name: Build
         run: cmake --build --preset "${{ matrix.build_preset }}"

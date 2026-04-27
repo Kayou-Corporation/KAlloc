@@ -1,9 +1,19 @@
 #---------------------------------------#
-#				SETUP					#
+#				  SETUP					#
 #---------------------------------------#
 cmake_minimum_required(VERSION 3.29.0 FATAL_ERROR)
 
 project(KAlloc VERSION 1.0.0 LANGUAGES CXX)
+
+
+
+#---------------------------------------#
+#				OPTIONS					#
+#---------------------------------------#
+option(USE_TRACY "Enable Tracy Integration" ON)
+option(KAlloc_BUILD_STATIC "Build static libraries" ON)
+option(DEBUG_ENABLED "Toggle Internal Debugging Features" ON)
+option(BUILD_EXECUTABLE "Build an executable to live debug the allocator" ON)
 
 
 
@@ -34,7 +44,6 @@ file(GLOB_RECURSE KAlloc_SOURCES "Code/Source/*.cpp")
 #---------------------------------------#
 #				BUILD MODE  			#
 #---------------------------------------#
-option(KAlloc_BUILD_STATIC "Build static libraries" ON)
 
 if(KAlloc_BUILD_STATIC)
     add_library(KAlloc STATIC ${KAlloc_SOURCES})
@@ -79,7 +88,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 #           COMPILING OPTIONS           #
 #---------------------------------------#
 # Toggle tracy internal integration
-option(USE_TRACY "Enable Tracy Integration" ON)
 
 if (USE_TRACY)
     target_link_libraries(KAlloc PUBLIC Tracy::TracyClient)
@@ -88,7 +96,6 @@ endif ()
 
 
 # Toggle debug features
-option(DEBUG_ENABLED "Toggle Internal Debugging Features" ON)
 if (DEBUG_ENABLED)
     target_compile_definitions(KAlloc PUBLIC KAYOU_DEBUG)
 endif ()
@@ -111,7 +118,6 @@ set_target_properties(KAlloc PROPERTIES OUTPUT_NAME "${PROJECT_NAME}-${PROJECT_V
 #---------------------------------------#
 enable_testing()
 
-option(BUILD_EXECUTABLE "Build an executable to live debug the allocator" ON)
 
 if (BUILD_EXECUTABLE)
     add_subdirectory(Test)
