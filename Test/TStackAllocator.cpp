@@ -5,6 +5,7 @@
 #include <cstdint>      // GCC std::uint32_t & std::uintptr_t
 #include <cstring>
 #include <iomanip>
+#include <algorithm>
 #include <iostream>
 #include <vector>
 

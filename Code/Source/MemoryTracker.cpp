@@ -11,9 +11,8 @@ namespace Kayou::Memory
     {
         const std::size_t index = static_cast<std::size_t>(tag);
 
-        s_allocated[index] += size;
-
-        const std::size_t current = s_allocated[index];
+        const std::size_t previous = s_allocated[index].fetch_add(size);
+        const std::size_t current = previous + size;
         std::size_t peak = s_peak[index];
 
         while (current > peak && !s_peak[index].compare_exchange_weak(peak, current)) { }
@@ -27,9 +26,9 @@ namespace Kayou::Memory
     {
         const std::size_t index = static_cast<std::size_t>(tag);
 
+        [[maybe_unused]] const std::size_t previous = s_allocated[index].fetch_sub(size); // Thread-safe sub operation
         #ifdef KAYOU_DEBUG
-            const std::size_t previous = s_allocated[index].fetch_sub(size); // Thread-safe sub operation
-            assert(previous >= size && "MemoryTracker::RemoveAllocation underflow");
+        assert(previous >= size && "MemoryTracker::RemoveAllocation underflow");
         #else
         s_allocated[index] -= size;
         #endif

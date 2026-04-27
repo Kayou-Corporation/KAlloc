@@ -8,8 +8,10 @@
 
 #include "Utils/MemoryUtils.hpp"
 
-#ifndef _WIN32
-#include <cstdlib>      // GCC/CLang std::free & posix_memalign
+#ifdef _WIN32
+    #include <malloc.h>     // MSVC _aligned_malloc & _aligned_free
+#else
+    #include <cstdlib>      // GCC/CLang std::free & posix_memalign
 #endif
 
 

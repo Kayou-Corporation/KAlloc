@@ -72,7 +72,8 @@ namespace Kayou::Memory
 
         assert(std::has_single_bit(memAlignment) && "FreeListAllocator memAlignment must be power of 2");
 
-        if (memAlignment > m_alignment)
+        const std::size_t effectiveAlignment = std::max(memAlignment, alignof(AllocationHeader));
+        if (effectiveAlignment > m_alignment)
             return nullptr;
 
         FreeBlock* previous = nullptr;
@@ -83,7 +84,7 @@ namespace Kayou::Memory
             const std::uintptr_t blockStart = reinterpret_cast<std::uintptr_t>(current);
             const std::uintptr_t afterHeader = blockStart + sizeof(AllocationHeader);
 
-            const std::uintptr_t userAddress = Internal::AlignForward(afterHeader, memAlignment);
+            const std::uintptr_t userAddress = Internal::AlignForward(afterHeader, effectiveAlignment);
             const std::size_t adjustment = static_cast<std::size_t>(userAddress - blockStart);
 
             std::size_t totalSize = adjustment + size;

@@ -69,13 +69,13 @@ namespace Kayou::Memory
 
         assert(std::has_single_bit(memAlignment) && "StackAllocator alignment must be power of 2");
 
-        // Requested alignment not supported by this allocator
-        if (memAlignment > m_alignment)
+        const std::size_t effectiveAlignment = std::max(memAlignment, alignof(AllocationHeader));
+        if (effectiveAlignment > m_alignment)
             return nullptr;
 
         const std::uintptr_t currentAddress = reinterpret_cast<std::uintptr_t>(m_start) + m_offset;
         const std::uintptr_t afterHeader = currentAddress + sizeof(AllocationHeader);
-        const std::uintptr_t userAddress = Internal::AlignForward(afterHeader, memAlignment);
+        const std::uintptr_t userAddress = Internal::AlignForward(afterHeader, effectiveAlignment);
 
         const std::size_t newOffset = static_cast<std::size_t>((userAddress - reinterpret_cast<std::uintptr_t>(m_start)) + size);
         if (newOffset > m_totalSize)

@@ -6,7 +6,6 @@
 #include "PoolAllocator.hpp"
 
 
-#pragma region tests
 int main()
 {
     using namespace Kayou;
