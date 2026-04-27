@@ -65,82 +65,89 @@ namespace Kayou::Memory
     }
 
 
-    void* FreeListAllocator::Alloc(const std::size_t size, const std::size_t memAlignment)
+void* FreeListAllocator::Alloc(const std::size_t size, const std::size_t memAlignment)
+{
+    if (size == 0)
+        return nullptr;
+
+    assert(std::has_single_bit(memAlignment) && "FreeListAllocator memAlignment must be a power of 2");
+
+    const std::size_t headerAlignment = alignof(AllocationHeader);
+    const std::size_t freeBlockAlignment = alignof(FreeBlock);
+
+    const std::size_t effectiveAlignment = std::max(memAlignment, headerAlignment);
+    const std::size_t internalAlignment = std::max(headerAlignment, freeBlockAlignment);
+
+    if (effectiveAlignment > m_alignment)
+        return nullptr;
+
+    FreeBlock* previous = nullptr;
+    FreeBlock* current = m_freeList;
+
+    while (current != nullptr)
     {
-        if (size == 0)
-            return nullptr;
+        const std::uintptr_t blockStart = reinterpret_cast<std::uintptr_t>(current);
+        const std::uintptr_t afterHeader = blockStart + sizeof(AllocationHeader);
+        const std::uintptr_t userAddress = Internal::AlignForward(afterHeader, effectiveAlignment);
+        const std::size_t adjustment = static_cast<std::size_t>(userAddress - blockStart);
 
-        assert(std::has_single_bit(memAlignment) && "FreeListAllocator memAlignment must be power of 2");
+        // Total used size (header + padding + user data)
+        std::size_t totalSize = adjustment + size;
 
-        const std::size_t effectiveAlignment = std::max(memAlignment, alignof(AllocationHeader));
-        if (effectiveAlignment > m_alignment)
-            return nullptr;
+        // Ensure alignment for next FreeBlock
+        totalSize = Internal::AlignUp(totalSize, internalAlignment);
 
-        FreeBlock* previous = nullptr;
-        FreeBlock* current = m_freeList;
-
-        while (current != nullptr)
+        if (current->size < totalSize)
         {
-            const std::uintptr_t blockStart = reinterpret_cast<std::uintptr_t>(current);
-            const std::uintptr_t afterHeader = blockStart + sizeof(AllocationHeader);
-
-            const std::uintptr_t userAddress = Internal::AlignForward(afterHeader, effectiveAlignment);
-            const std::size_t adjustment = static_cast<std::size_t>(userAddress - blockStart);
-
-            std::size_t totalSize = adjustment + size;
-
-            // Not enough space in this block
-            if (current->size < totalSize)
-            {
-                previous = current;
-                current = current->next;
-
-                continue;
-            }
-
-            // Split block if enough space is available
-            const std::size_t remainingSize = current->size - totalSize;
-            if (remainingSize >= sizeof(FreeBlock))
-            {
-                FreeBlock* newBlock = reinterpret_cast<FreeBlock*>(blockStart + totalSize);
-                newBlock->size = remainingSize;
-                newBlock->next = current->next;
-
-                if (previous)
-                    previous->next = newBlock;
-                else
-                    m_freeList = newBlock;
-            }
-            else
-            {
-                // Consume the entire block
-                totalSize = current->size;
-
-                if (previous)
-                    previous->next = current->next;
-                else
-                    m_freeList = current->next;
-            }
-
-            // Write allocation header
-            AllocationHeader* header = reinterpret_cast<AllocationHeader*>(userAddress - sizeof(AllocationHeader));
-            header->blockSize = totalSize;
-            header->adjustment = adjustment;
-
-            #ifdef KAYOU_DEBUG
-            header->magic = kFreeListAllocationHeaderMagic;
-            #endif
-
-            // Update stats
-            m_usedSize += totalSize;
-            m_peakSize = std::max(m_peakSize, m_usedSize);
-
-            return reinterpret_cast<void*>(userAddress);
+            previous = current;
+            current = current->next;
+            continue;
         }
 
-        // No matching block found
-        return nullptr;
+        const std::size_t remainingSize = current->size - totalSize;
+        if (remainingSize >= sizeof(FreeBlock))
+        {
+            // Split
+            FreeBlock* newBlock = reinterpret_cast<FreeBlock*>(blockStart + totalSize);
+
+            newBlock->size = remainingSize;
+            newBlock->next = current->next;
+
+            if (previous)
+                previous->next = newBlock;
+            else
+                m_freeList = newBlock;
+        }
+        else
+        {
+            // Consume the entire block
+            totalSize = current->size;
+
+            if (previous)
+                previous->next = current->next;
+            else
+                m_freeList = current->next;
+        }
+
+        // Writing the header
+        AllocationHeader* header = reinterpret_cast<AllocationHeader*>(userAddress - sizeof(AllocationHeader));
+
+        header->blockSize = totalSize;
+        header->adjustment = adjustment;
+
+        #ifdef KAYOU_DEBUG
+        header->magic = kFreeListAllocationHeaderMagic;
+        #endif
+
+        // Stats
+        m_usedSize += totalSize;
+        m_peakSize = std::max(m_peakSize, m_usedSize);
+
+        return reinterpret_cast<void*>(userAddress);
     }
+    // No matching block found
+    return nullptr;
+}
 
 
     void FreeListAllocator::Free(void* ptr)
