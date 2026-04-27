@@ -1,0 +1,64 @@
+name: CI
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows Clang Debug
+            os: windows-latest
+            configure_preset: windows-clang-debug
+            build_preset: Windows Clang Debug
+
+          - name: Windows GCC Debug
+            os: windows-latest
+            configure_preset: windows-gcc-debug
+            build_preset: Windows GCC Debug
+
+          - name: Windows MSVC Debug
+            os: windows-latest
+            configure_preset: vs2022
+            build_preset: VS2022 Debug
+
+          - name: Linux Clang Debug
+            os: ubuntu-latest
+            configure_preset: unix-clang-debug
+            build_preset: Unix Clang Debug
+
+          - name: Linux GCC Debug
+            os: ubuntu-latest
+            configure_preset: unix-gcc-debug
+            build_preset: Unix GCC Debug
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build clang g++
+
+      - name: Configure
+        run: cmake --preset "${{ matrix.configure_preset }}" -DUSE_TRACY=OFF
+
+      - name: Build
+        run: cmake --build --preset "${{ matrix.build_preset }}"
