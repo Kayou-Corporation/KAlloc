@@ -133,11 +133,11 @@ namespace Kayou::Memory
 
         const std::uintptr_t ptrAddress = reinterpret_cast<std::uintptr_t>(ptr);
         const std::uintptr_t startAddress = reinterpret_cast<std::uintptr_t>(m_start);
-        const std::size_t endAddress = startAddress + m_totalSize;
+        [[maybe_unused]]  const std::size_t endAddress = startAddress + m_totalSize;
 
         assert(ptrAddress >= startAddress && ptrAddress < endAddress && "Pointer does not belong to this pool");
 
-        const std::size_t offset = ptrAddress - startAddress;
+        [[maybe_unused]]  const std::size_t offset = ptrAddress - startAddress;
         assert(offset % m_blockStride == 0 && "Pointer is not aligned to the pool's block size");
 
         const std::size_t blockIndex = GetBlockIndex(ptr);

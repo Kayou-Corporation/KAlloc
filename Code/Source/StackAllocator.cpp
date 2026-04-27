@@ -104,7 +104,7 @@ namespace Kayou::Memory
 
         const std::uintptr_t ptrAddress = reinterpret_cast<std::uintptr_t>(ptr);
         const std::uintptr_t startAddress = reinterpret_cast<std::uintptr_t>(m_start);
-        const std::uintptr_t endAddress = startAddress + m_totalSize;
+        [[maybe_unused]] const std::uintptr_t endAddress = startAddress + m_totalSize;
 
         assert(ptrAddress >= startAddress && ptrAddress < endAddress && "Pointer does not belong to this stack allocator");
 

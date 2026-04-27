@@ -149,7 +149,7 @@ namespace Kayou::Memory
 
         const std::uintptr_t userAddress = reinterpret_cast<std::uintptr_t>(ptr);
         const std::uintptr_t startAddress = reinterpret_cast<std::uintptr_t>(m_start);
-        const std::uintptr_t endAddress = startAddress + m_totalSize;
+        [[maybe_unused]] const std::uintptr_t endAddress = startAddress + m_totalSize;
 
         assert(userAddress >= startAddress && userAddress < endAddress && "Pointer does not belong to this free list allocator");
 
