@@ -5,8 +5,8 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>      // GCC std::uint32_t & std::uintptr_t
+#include <unordered_map>
 #include <utility>
-#include <vector>
 
 #include "AllocationHeader.hpp"
 #include "MemoryAllocator.hpp"
@@ -65,7 +65,7 @@ namespace Kayou::Memory
             MemoryTracker::AddAllocation(userPtr, size, tag);
 
             if constexpr (ResettableAllocator<Derived>)
-                m_activeAllocations.push_back({ userPtr, size, tag });
+                m_activeAllocations.emplace(userPtr, ActiveAllocation{ size, tag });
 
             return userPtr;
         }
@@ -98,11 +98,11 @@ namespace Kayou::Memory
 
             if constexpr (ResettableAllocator<Derived>)
             {
-                const auto it = std::find_if(m_activeAllocations.begin(), m_activeAllocations.end(),
-                    [ptr](const ActiveAllocation& alloc)
-                    {
-                        return alloc.ptr == ptr;
-                    });
+                const auto it = m_activeAllocations.find(ptr);
+
+                #ifdef KAYOU_DEBUG
+                assert(it != m_activeAllocations.end() && "TrackedAllocator::Free unknown pointer");
+                #endif
 
                 if (it != m_activeAllocations.end())
                     m_activeAllocations.erase(it);
@@ -117,8 +117,8 @@ namespace Kayou::Memory
         ///        This will replace any Free() function
         KAYOU_ALWAYS_INLINE void Reset() requires ResettableAllocator<Derived>
         {
-            for (const ActiveAllocation& alloc : m_activeAllocations)
-                RemoveTrackedAllocation(alloc.ptr, alloc.size, alloc.tag);
+            for (const auto& [ptr, alloc] : m_activeAllocations)
+                RemoveTrackedAllocation(ptr, alloc.size, alloc.tag);
 
             m_activeAllocations.clear();
             m_derived.Reset();
@@ -139,9 +139,8 @@ namespace Kayou::Memory
     private:
         struct ActiveAllocation
         {
-            void* ptr;
-            std::size_t size;
-            MemoryTag tag;
+            std::size_t size    = 0;
+            MemoryTag tag       = MemoryTag::General;
         };
 
         KAYOU_ALWAYS_INLINE void RemoveTrackedAllocation(void* ptr, const std::size_t size, const MemoryTag tag)
@@ -155,7 +154,7 @@ namespace Kayou::Memory
         }
 
 
-        std::vector<ActiveAllocation> m_activeAllocations { };
+        std::unordered_map<void*, ActiveAllocation> m_activeAllocations { };
         Derived m_derived;
     };
 }
