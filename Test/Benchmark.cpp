@@ -40,7 +40,7 @@ namespace Benchmark
     static constexpr std::uint32_t kSeed = 0xC0FFEEu;
 
     template <typename TAllocator>
-void* AllocRaw(TAllocator& allocator, const std::size_t size, const std::size_t alignment)
+    void* AllocRaw(TAllocator& allocator, const std::size_t size, const std::size_t alignment)
     {
         return allocator.Alloc(size, alignment);
     }
@@ -115,6 +115,11 @@ void* AllocRaw(TAllocator& allocator, const std::size_t size, const std::size_t 
 
         std::size_t allocatorUsedAfterAlloc = 0;
         std::size_t allocatorPeakAfterAlloc = 0;
+
+        std::size_t freeBlockCount = 0;
+        std::size_t largestFreeBlock = 0;
+        std::size_t totalFreeSize = 0;
+        double fragmentationRatio = 0.0;
     };
 
     static void PrintBytes(const std::uint64_t bytes)
@@ -190,6 +195,23 @@ void* AllocRaw(TAllocator& allocator, const std::size_t size, const std::size_t 
             std::cout << "  allocator peak        : ";
             PrintBytes(result.allocatorPeakAfterAlloc);
             std::cout << '\n';
+        }
+
+        if (result.totalFreeSize != 0 || result.freeBlockCount != 0)
+        {
+            std::cout << "  free blocks           : " << result.freeBlockCount << '\n';
+
+            std::cout << "  largest free block    : ";
+            PrintBytes(result.largestFreeBlock);
+            std::cout << '\n';
+
+            std::cout << "  total free size       : ";
+            PrintBytes(result.totalFreeSize);
+            std::cout << '\n';
+
+            std::cout << "  fragmentation         : "
+                      << std::fixed << std::setprecision(2)
+                      << result.fragmentationRatio * 100.0 << "%\n";
         }
     }
 
@@ -287,6 +309,7 @@ void* AllocRaw(TAllocator& allocator, const std::size_t size, const std::size_t 
         result.freeTime = freeTimer.Elapsed();
         result.totalTime = totalTimer.Elapsed();
         result.rssAfterFree = GetProcessRSSBytes();
+        CaptureFreeListStats(allocator, result);
 
         return result;
     }
@@ -430,6 +453,7 @@ void* AllocRaw(TAllocator& allocator, const std::size_t size, const std::size_t 
         result.freeTime = freeTimer.Elapsed();
         result.totalTime = totalTimer.Elapsed();
         result.rssAfterFree = GetProcessRSSBytes();
+        CaptureFreeListStats(allocator, result);
 
         return result;
     }
@@ -497,6 +521,38 @@ void* AllocRaw(TAllocator& allocator, const std::size_t size, const std::size_t 
         result.rssAfterFree = GetProcessRSSBytes();
 
         return result;
+    }
+
+
+    template <typename TAllocator>
+    void CaptureFreeListStats(TAllocator& allocator, BenchResult& result)
+    {
+        if constexpr (requires(TAllocator a)
+        {
+            a.GetFreeBlockCount();
+            a.GetLargestFreeBlockSize();
+            a.GetTotalFreeSize();
+            a.GetFragmentationRatio();
+        })
+        {
+            result.freeBlockCount = allocator.GetFreeBlockCount();
+            result.largestFreeBlock = allocator.GetLargestFreeBlockSize();
+            result.totalFreeSize = allocator.GetTotalFreeSize();
+            result.fragmentationRatio = allocator.GetFragmentationRatio();
+        }
+        else if constexpr (requires(TAllocator a)
+        {
+            a.GetAllocator().GetFreeBlockCount();
+            a.GetAllocator().GetLargestFreeBlockSize();
+            a.GetAllocator().GetTotalFreeSize();
+            a.GetAllocator().GetFragmentationRatio();
+        })
+        {
+            result.freeBlockCount = allocator.GetAllocator().GetFreeBlockCount();
+            result.largestFreeBlock = allocator.GetAllocator().GetLargestFreeBlockSize();
+            result.totalFreeSize = allocator.GetAllocator().GetTotalFreeSize();
+            result.fragmentationRatio = allocator.GetAllocator().GetFragmentationRatio();
+        }
     }
 }
 

@@ -5,8 +5,6 @@ env:
 
 on:
   push:
-    branches:
-      - master
     tags:
       - "v*.*.*"
 
@@ -111,17 +109,12 @@ jobs:
           path: release-packages
           merge-multiple: true
 
-      - name: Create release tag name
+      - name: Create release info
         id: release_info
         shell: bash
         run: |
-          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
-            echo "tag_name=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
-            echo "release_name=Release ${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
-          else
-            echo "tag_name=auto-${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
-            echo "release_name=Automated Build ${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
-          fi
+          echo "tag_name=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          echo "release_name=KAlloc ${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3

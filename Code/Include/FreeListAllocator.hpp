@@ -52,6 +52,18 @@ namespace Kayou::Memory
         /// @return The current memory alignment of the allocator
         KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE std::size_t GetAlignment() const           { return m_alignment; }
 
+        /// @return The number of free blocks currently available in the allocator
+        KAYOU_NO_DISCARD std::size_t GetFreeBlockCount() const;
+
+        /// @return The size of the largest free block currently available in the allocator, in bytes
+        KAYOU_NO_DISCARD std::size_t GetLargestFreeBlockSize() const;
+
+        /// @return The total size of all free blocks currently available in the allocator, in bytes
+        KAYOU_NO_DISCARD std::size_t GetTotalFreeSize() const;
+
+        /// @return The fragmentation ratio of the allocator, calculated as (1 - (largest free block size / total free size))
+        KAYOU_NO_DISCARD double GetFragmentationRatio() const;
+
 
     private:
         struct FreeBlock
