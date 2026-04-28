@@ -10,10 +10,9 @@ project(KAlloc VERSION 1.0.0 LANGUAGES CXX)
 #---------------------------------------#
 #				OPTIONS					#
 #---------------------------------------#
-option(USE_TRACY "Enable Tracy Integration" ON)
-option(KAlloc_BUILD_STATIC "Build static libraries" ON)
-option(DEBUG_ENABLED "Toggle Internal Debugging Features" ON)
-option(BUILD_EXECUTABLE "Build an executable to live debug the allocator" ON)
+option(KALLOC_USE_TRACY "Enable Tracy Integration" OFF)
+option(KALLOC_DEBUG_ENABLED "Toggle Internal Debugging Features" OFF)
+option(KALLOC_BUILD_EXECUTABLE "Build an executable to live debug the allocator" OFF)
 
 
 
@@ -37,7 +36,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${OUTPUT_DIR_BASE}/$<CONFIG>/libs")
 #---------------------------------------#
 #				SOURCES					#
 #---------------------------------------#
-file(GLOB_RECURSE KAlloc_SOURCES "Code/Source/*.cpp")
+file(GLOB_RECURSE KALLOC_SOURCES "Code/Source/*.cpp")
 
 
 
@@ -45,11 +44,7 @@ file(GLOB_RECURSE KAlloc_SOURCES "Code/Source/*.cpp")
 #				BUILD MODE  			#
 #---------------------------------------#
 
-if(KAlloc_BUILD_STATIC)
-    add_library(KAlloc STATIC ${KAlloc_SOURCES})
-else()
-    add_library(KAlloc SHARED ${KAlloc_SOURCES})
-endif()
+add_library(KAlloc STATIC ${KALLOC_SOURCES})
 
 
 
@@ -89,14 +84,15 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 #---------------------------------------#
 # Toggle tracy internal integration
 
-if (USE_TRACY)
+if (KALLOC_USE_TRACY)
+    # Tracy folder include is done inside `Libs/CMakeLists.txt`
     target_link_libraries(KAlloc PUBLIC Tracy::TracyClient)
     target_compile_definitions(KAlloc PUBLIC KAYOU_USE_TRACY)
 endif ()
 
 
 # Toggle debug features
-if (DEBUG_ENABLED)
+if (KALLOC_DEBUG_ENABLED)
     target_compile_definitions(KAlloc PUBLIC KAYOU_DEBUG)
 endif ()
 
@@ -119,6 +115,6 @@ set_target_properties(KAlloc PROPERTIES OUTPUT_NAME "${PROJECT_NAME}-${PROJECT_V
 enable_testing()
 
 
-if (BUILD_EXECUTABLE)
+if (KALLOC_BUILD_EXECUTABLE)
     add_subdirectory(Test)
 endif()
