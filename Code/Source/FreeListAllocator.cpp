@@ -194,7 +194,9 @@ void* FreeListAllocator::Alloc(const std::size_t size, const std::size_t memAlig
 
     void FreeListAllocator::PrintUsage() const
     {
-        printf("FreeList Allocator: %zu bytes used (peak = %zu) / %zu total\n", m_usedSize, m_peakSize, m_totalSize);
+        printf("FreeList Allocator: %zu used / %zu total | peak = %zu\n", m_usedSize, m_totalSize, m_peakSize);
+
+        printf("Free blocks: %zu | Largest free: %zu | Fragmentation: %.2f%%\n", GetFreeBlockCount(), GetLargestFreeBlockSize(), GetFragmentationRatio() * 100.0);
     }
 
 
@@ -268,5 +270,62 @@ void* FreeListAllocator::Alloc(const std::size_t size, const std::size_t memAlig
             else
                 current = current->next;
         }
+    }
+
+
+    std::size_t FreeListAllocator::GetFreeBlockCount() const
+    {
+        std::size_t count = 0;
+
+        const FreeBlock* current = m_freeList;
+        while (current != nullptr)
+        {
+            ++count;
+            current = current->next;
+        }
+
+        return count;
+    }
+
+
+    std::size_t FreeListAllocator::GetLargestFreeBlockSize() const
+    {
+        std::size_t largest = 0;
+
+        const FreeBlock* current = m_freeList;
+        while (current != nullptr)
+        {
+            largest = std::max(largest, current->size);
+            current = current->next;
+        }
+
+        return largest;
+    }
+
+
+    std::size_t FreeListAllocator::GetTotalFreeSize() const
+    {
+        std::size_t total = 0;
+
+        const FreeBlock* current = m_freeList;
+        while (current != nullptr)
+        {
+            total += current->size;
+            current = current->next;
+        }
+
+        return total;
+    }
+
+
+    double FreeListAllocator::GetFragmentationRatio() const
+    {
+        const std::size_t totalFree = GetTotalFreeSize();
+        if (totalFree == 0)
+            return 0.0;
+
+        const std::size_t largestFree = GetLargestFreeBlockSize();
+
+        return 1.0 - (static_cast<double>(largestFree) / static_cast<double>(totalFree));
     }
 }
