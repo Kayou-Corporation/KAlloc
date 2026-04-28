@@ -41,15 +41,16 @@ namespace Kayou::Memory
 
             assert(std::has_single_bit(memAlignment) && "TrackedAllocator memAlignment must be power of 2");
 
-            const std::size_t totalSize = size + sizeof(Internal::AllocationHeader) + memAlignment - 1;
             const std::size_t requiredAlignment = std::max(memAlignment, alignof(Internal::AllocationHeader));
+            const std::size_t totalSize = size + sizeof(Internal::AllocationHeader) + requiredAlignment - 1;
+
             void* rawPtr = m_derived.Alloc(totalSize, requiredAlignment);
             if (rawPtr == nullptr)
                 return nullptr;
 
             const std::uintptr_t rawAddress = reinterpret_cast<std::uintptr_t>(rawPtr);
             const std::uintptr_t afterHeader = rawAddress + sizeof(Internal::AllocationHeader);
-            const std::uintptr_t userAddress = Internal::AlignForward(afterHeader, memAlignment);
+            const std::uintptr_t userAddress = Internal::AlignForward(afterHeader, requiredAlignment);
 
             Internal::AllocationHeader* header = reinterpret_cast<Internal::AllocationHeader*>(userAddress - sizeof(Internal::AllocationHeader));
             header->size = size;
