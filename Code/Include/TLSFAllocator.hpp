@@ -32,16 +32,24 @@ namespace Kayou::Memory
         TLSFAllocator& operator=(const TLSFAllocator&) = delete;
         TLSFAllocator& operator=(TLSFAllocator&&) = delete;
 
+        /// @brief Allocated memory using the TLSF algorithm
+        /// @param size The size of the allocation
+        /// @param memAlignment [OPTIONAL] The desired memory alignment (must always be a multiple-of-two)
+        /// @return nullptr if no suitable block is found
         void* Alloc(std::size_t size, std::size_t memAlignment = alignof(std::max_align_t));
         void Free(void* ptr);
         void Reset();
         void PrintUsage() const;
 
+        KAYOU_NO_DISCARD std::size_t GetUsedSize() const            { return m_usedSize; }
+        KAYOU_NO_DISCARD std::size_t GetPeakSize() const            { return m_peakSize; }
+        KAYOU_NO_DISCARD std::size_t GetTotalSize() const           { return m_totalSize; }
+        KAYOU_NO_DISCARD std::size_t GetAlignment() const           { return m_alignment; }
 
-        KAYOU_NO_DISCARD std::size_t GetUsedSize() const;
-        KAYOU_NO_DISCARD std::size_t GetPeakSize() const;
-        KAYOU_NO_DISCARD std::size_t GetTotalSize() const;
-        KAYOU_NO_DISCARD std::size_t GetAlignment() const;
+        KAYOU_NO_DISCARD std::size_t GetFreeBlockCount() const;
+        KAYOU_NO_DISCARD std::size_t GetLargestFreeBlockSize() const;
+        KAYOU_NO_DISCARD std::size_t GetTotalFreeSize() const;
+        KAYOU_NO_DISCARD double GetFragmentationRatio() const;
 
 
     private:
@@ -50,13 +58,18 @@ namespace Kayou::Memory
         /// For free blocks, prev/next are used to link the block into a TLSF free list
         /// For used blocks, prev/next are not meaningful
         ///
-        /// `size` stores the full block size (header + data)
+        /// `size` stores the full block size (header and data)
         struct BlockHeader
         {
             std::size_t size = 0;
             BlockHeader* prev = nullptr;
             BlockHeader* next = nullptr;
             bool isFree = true;
+        };
+
+        struct AllocationHeader
+        {
+            BlockHeader* block = nullptr;
         };
 
         static const std::size_t minBlockSize = 16;
@@ -79,8 +92,6 @@ namespace Kayou::Memory
         std::size_t m_usedSize = 0;
         std::size_t m_peakSize = 0;
 
-        static std::size_t AlignUp(std::size_t size, std::size_t alignment);
-
         /// @brief Converts a size into a mapping (FLI, SLI)
         ///        This tells us in which bucket the data block
         ///        should be stored based on its size
@@ -99,19 +110,22 @@ namespace Kayou::Memory
         /// @param block The block to be removed
         void RemoveBlock(BlockHeader* block);
 
-        BlockHeader* FindFreeBlock(std::size_t size, std::size_t& fli, std::size_t& sli) const;
-
         /// @brief Finds a free block large enough for the requested size
         ///        Instead of scanning all free blocks, TLSF checks the bitmaps
         ///        to quickly find a bucket that contains a suitable block
         ///
-        /// @returns nullptr if no block is availabnle
+        /// @return nullptr if no block is availabnle
         BlockHeader* FindSuitableBlock(std::size_t size) const;
 
         /// @brief Splits a large block into two separate blocks
         ///        The first part keeps the requested size
         ///        The remaining part becomes a new free block and is inserted into TLSF
         void SplitBlock(BlockHeader* block, std::size_t size);
-        void MergeBlock(BlockHeader* block);
+
+        /// @brief Merges a block with the next block if it is free
+        ///        This helps reduce fragmentation by combining adjacent blocks
+        ///
+        /// @return The merged block
+        BlockHeader* MergeBlock(BlockHeader* block);
     };
 }
