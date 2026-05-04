@@ -18,6 +18,8 @@
 #include <type_traits>
 #include <vector>
 
+#include "TLSFAllocator.hpp"
+
 #ifdef _WIN32
     #ifndef NOMINMAX
         #define NOMINMAX
@@ -561,6 +563,7 @@ int main()
     using namespace Benchmark;
     using Kayou::Memory::FreeListAllocator;
     using Kayou::Memory::TrackedAllocator;
+    using Kayou::Memory::TLSFAllocator;
 
     constexpr std::size_t kObjectCount = 5000;
     constexpr std::size_t kBufferCount = 5000;
@@ -577,16 +580,24 @@ int main()
     const BenchResult bufferNewDelete = RunBufferBenchmarkNewDelete(kBufferCount);
     const BenchResult bufferFreeList = RunBufferBenchmarkAllocator<FreeListAllocator>("FreeListAllocator - variable buffers", kBufferCount);
     const BenchResult bufferTrackedFreeList = RunBufferBenchmarkAllocator<TrackedAllocator<FreeListAllocator>>("TrackedAllocator<FreeListAllocator> - variable buffers", kBufferCount);
+    const BenchResult objectTLSF = RunObjectBenchmarkAllocator<TLSFAllocator>("TLSFAllocator - GameObject", kObjectCount);
+    const BenchResult objectTrackedTLSF = RunObjectBenchmarkAllocator<TrackedAllocator<TLSFAllocator>>("TrackedAllocator<TLSFAllocator> - GameObject", kObjectCount);
+    const BenchResult bufferTLSF = RunBufferBenchmarkAllocator<TLSFAllocator>("TLSFAllocator - variable buffers", kBufferCount);
+    const BenchResult bufferTrackedTLSF = RunBufferBenchmarkAllocator<TrackedAllocator<TLSFAllocator>>("TrackedAllocator<TLSFAllocator> - variable buffers", kBufferCount);
 
     std::cout << "\nOBJECT BENCHMARKS\n";
     PrintResult(objectNewDelete);
     PrintResult(objectFreeList);
     PrintResult(objectTrackedFreeList);
+    PrintResult(objectTLSF);
+    PrintResult(objectTrackedTLSF);
 
     std::cout << "\nVARIABLE BUFFER BENCHMARKS\n";
     PrintResult(bufferNewDelete);
     PrintResult(bufferFreeList);
     PrintResult(bufferTrackedFreeList);
+    PrintResult(bufferTLSF);
+    PrintResult(bufferTrackedTLSF);
 
     std::cout << "\n================ DONE ================\n";
 

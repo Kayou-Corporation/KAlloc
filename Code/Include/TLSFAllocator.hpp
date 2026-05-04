@@ -72,9 +72,9 @@ namespace Kayou::Memory
             BlockHeader* block = nullptr;
         };
 
-        static const std::size_t minBlockSize = 16;
-        static const std::size_t FLICount = 32;
-        static const std::size_t SLICount = 16;
+        inline static const std::size_t minBlockSize = 16;
+        inline static const std::size_t FLICount = 32;
+        inline static const std::size_t SLICount = 16;
 
         /// @brief Main bitmap (which FLI buckets contain something)
         std::uint32_t m_fliBitmap = 0;

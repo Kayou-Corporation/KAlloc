@@ -135,7 +135,7 @@ namespace Kayou::Memory
         ;
         #ifdef KAYOU_DEBUG
         assert(block != nullptr && "TLSFAllocator::Free invalid allocation header");
-        assert(block->isFree && "TLSFAllocator::Free called twice");
+        assert(!block->isFree && "TLSFAllocator::Free called twice");
         #endif
 
         block->isFree = true;
