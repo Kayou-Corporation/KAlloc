@@ -18,6 +18,9 @@
 #include <type_traits>
 #include <vector>
 
+#include "PoolAllocator.hpp"
+#include "TLSFAllocator.hpp"
+
 #ifdef _WIN32
     #ifndef NOMINMAX
         #define NOMINMAX
@@ -121,6 +124,39 @@ namespace Benchmark
         std::size_t totalFreeSize = 0;
         double fragmentationRatio = 0.0;
     };
+
+
+    template <typename TAllocator>
+    void CaptureFreeListStats(TAllocator& allocator, BenchResult& result)
+    {
+        if constexpr (requires(TAllocator a)
+        {
+            a.GetFreeBlockCount();
+            a.GetLargestFreeBlockSize();
+            a.GetTotalFreeSize();
+            a.GetFragmentationRatio();
+        })
+        {
+            result.freeBlockCount = allocator.GetFreeBlockCount();
+            result.largestFreeBlock = allocator.GetLargestFreeBlockSize();
+            result.totalFreeSize = allocator.GetTotalFreeSize();
+            result.fragmentationRatio = allocator.GetFragmentationRatio();
+        }
+        else if constexpr (requires(TAllocator a)
+        {
+            a.GetAllocator().GetFreeBlockCount();
+            a.GetAllocator().GetLargestFreeBlockSize();
+            a.GetAllocator().GetTotalFreeSize();
+            a.GetAllocator().GetFragmentationRatio();
+        })
+        {
+            result.freeBlockCount = allocator.GetAllocator().GetFreeBlockCount();
+            result.largestFreeBlock = allocator.GetAllocator().GetLargestFreeBlockSize();
+            result.totalFreeSize = allocator.GetAllocator().GetTotalFreeSize();
+            result.fragmentationRatio = allocator.GetAllocator().GetFragmentationRatio();
+        }
+    }
+
 
     static void PrintBytes(const std::uint64_t bytes)
     {
@@ -314,6 +350,81 @@ namespace Benchmark
         return result;
     }
 
+    BenchResult RunObjectBenchmarkPoolAllocator(const std::string_view name, const std::size_t count)
+{
+    Kayou::Memory::PoolAllocator allocator(
+        sizeof(GameObject),
+        count,
+        kAllocatorAlignment
+    );
+
+    std::vector<GameObject*> objects;
+    objects.reserve(count);
+
+    BenchResult result {};
+    result.name = name;
+    result.allocationCount = count;
+    result.requestedBytes = count * sizeof(GameObject);
+
+    std::mt19937 rng(kSeed);
+    std::vector<std::size_t> indices(count);
+    std::iota(indices.begin(), indices.end(), 0);
+    std::shuffle(indices.begin(), indices.end(), rng);
+
+    result.rssBefore = GetProcessRSSBytes();
+    result.rssPeakObserved = result.rssBefore;
+
+    Timer totalTimer;
+    totalTimer.Reset();
+
+    Timer allocTimer;
+    allocTimer.Reset();
+
+    for (std::size_t i = 0; i < count; ++i)
+    {
+        void* memory = allocator.Alloc(sizeof(GameObject), alignof(GameObject));
+        if (memory == nullptr)
+            break;
+
+        auto* object = new (memory) GameObject(static_cast<std::uint64_t>(i));
+        objects.push_back(object);
+
+        ++result.successfulAllocs;
+
+        const std::uint64_t rss = GetProcessRSSBytes();
+        result.rssPeakObserved = std::max(result.rssPeakObserved, rss);
+    }
+
+    result.allocTime = allocTimer.Elapsed();
+    result.rssAfterAlloc = GetProcessRSSBytes();
+    result.rssPeakObserved = std::max(result.rssPeakObserved, result.rssAfterAlloc);
+
+    result.allocatorUsedAfterAlloc = allocator.GetUsedBlocks() * allocator.GetObjectCount();
+    result.allocatorPeakAfterAlloc = allocator.GetPeakBlocks() * allocator.GetObjectCount();
+
+    Timer freeTimer;
+    freeTimer.Reset();
+
+    for (const std::size_t shuffledIndex : indices)
+    {
+        if (shuffledIndex >= objects.size() || objects[shuffledIndex] == nullptr)
+            continue;
+
+        GameObject* object = objects[shuffledIndex];
+        object->~GameObject();
+        allocator.Free(object);
+
+        const std::uint64_t rss = GetProcessRSSBytes();
+        result.rssPeakObserved = std::max(result.rssPeakObserved, rss);
+    }
+
+    result.freeTime = freeTimer.Elapsed();
+    result.totalTime = totalTimer.Elapsed();
+    result.rssAfterFree = GetProcessRSSBytes();
+
+    return result;
+}
+
     BenchResult RunObjectBenchmarkNewDelete(const std::size_t count)
     {
         std::vector<GameObject*> objects;
@@ -458,6 +569,89 @@ namespace Benchmark
         return result;
     }
 
+
+    BenchResult RunObjectBenchmarkTrackedPoolAllocator(const std::string_view name, const std::size_t count)
+{
+        constexpr std::size_t trackedBlockSize = sizeof(GameObject) + sizeof(Kayou::Memory::Internal::AllocationHeader) + kAllocatorAlignment;
+        Kayou::Memory::TrackedAllocator<Kayou::Memory::PoolAllocator> allocator(trackedBlockSize, count, kAllocatorAlignment);
+
+    std::vector<GameObject*> objects;
+    objects.reserve(count);
+
+    BenchResult result {};
+    result.name = name;
+    result.allocationCount = count;
+    result.requestedBytes = count * sizeof(GameObject);
+
+    std::mt19937 rng(kSeed);
+    std::vector<std::size_t> indices(count);
+    std::iota(indices.begin(), indices.end(), 0);
+    std::shuffle(indices.begin(), indices.end(), rng);
+        
+
+    result.rssBefore = GetProcessRSSBytes();
+    result.rssPeakObserved = result.rssBefore;
+
+    Timer totalTimer;
+    totalTimer.Reset();
+
+    Timer allocTimer;
+    allocTimer.Reset();
+
+    for (std::size_t i = 0; i < count; ++i)
+    {
+        void* memory = allocator.Alloc(
+            sizeof(GameObject),
+            Kayou::Memory::MemoryTag::General,
+            alignof(GameObject)
+        );
+
+        if (memory == nullptr)
+            break;
+
+        auto* object = new (memory) GameObject(static_cast<std::uint64_t>(i));
+        objects.push_back(object);
+
+        ++result.successfulAllocs;
+
+        const std::uint64_t rss = GetProcessRSSBytes();
+        result.rssPeakObserved = std::max(result.rssPeakObserved, rss);
+    }
+
+    result.allocTime = allocTimer.Elapsed();
+    result.rssAfterAlloc = GetProcessRSSBytes();
+    result.rssPeakObserved = std::max(result.rssPeakObserved, result.rssAfterAlloc);
+
+    result.allocatorUsedAfterAlloc =
+        allocator.GetAllocator().GetUsedBlocks() * allocator.GetAllocator().GetObjectCount();
+
+    result.allocatorPeakAfterAlloc =
+        allocator.GetAllocator().GetPeakBlocks() * allocator.GetAllocator().GetObjectCount();
+
+    Timer freeTimer;
+    freeTimer.Reset();
+
+    for (const std::size_t shuffledIndex : indices)
+    {
+        if (shuffledIndex >= objects.size() || objects[shuffledIndex] == nullptr)
+            continue;
+
+        GameObject* object = objects[shuffledIndex];
+        object->~GameObject();
+        allocator.Free(object);
+
+        const std::uint64_t rss = GetProcessRSSBytes();
+        result.rssPeakObserved = std::max(result.rssPeakObserved, rss);
+    }
+
+    result.freeTime = freeTimer.Elapsed();
+    result.totalTime = totalTimer.Elapsed();
+    result.rssAfterFree = GetProcessRSSBytes();
+
+    return result;
+}
+
+
     BenchResult RunBufferBenchmarkNewDelete(const std::size_t count)
     {
         std::vector<BufferAllocation> allocations;
@@ -522,38 +716,6 @@ namespace Benchmark
 
         return result;
     }
-
-
-    template <typename TAllocator>
-    void CaptureFreeListStats(TAllocator& allocator, BenchResult& result)
-    {
-        if constexpr (requires(TAllocator a)
-        {
-            a.GetFreeBlockCount();
-            a.GetLargestFreeBlockSize();
-            a.GetTotalFreeSize();
-            a.GetFragmentationRatio();
-        })
-        {
-            result.freeBlockCount = allocator.GetFreeBlockCount();
-            result.largestFreeBlock = allocator.GetLargestFreeBlockSize();
-            result.totalFreeSize = allocator.GetTotalFreeSize();
-            result.fragmentationRatio = allocator.GetFragmentationRatio();
-        }
-        else if constexpr (requires(TAllocator a)
-        {
-            a.GetAllocator().GetFreeBlockCount();
-            a.GetAllocator().GetLargestFreeBlockSize();
-            a.GetAllocator().GetTotalFreeSize();
-            a.GetAllocator().GetFragmentationRatio();
-        })
-        {
-            result.freeBlockCount = allocator.GetAllocator().GetFreeBlockCount();
-            result.largestFreeBlock = allocator.GetAllocator().GetLargestFreeBlockSize();
-            result.totalFreeSize = allocator.GetAllocator().GetTotalFreeSize();
-            result.fragmentationRatio = allocator.GetAllocator().GetFragmentationRatio();
-        }
-    }
 }
 
 int main()
@@ -561,6 +723,8 @@ int main()
     using namespace Benchmark;
     using Kayou::Memory::FreeListAllocator;
     using Kayou::Memory::TrackedAllocator;
+    using Kayou::Memory::TLSFAllocator;
+    using Kayou::Memory::PoolAllocator;
 
     constexpr std::size_t kObjectCount = 5000;
     constexpr std::size_t kBufferCount = 5000;
@@ -573,20 +737,32 @@ int main()
     const BenchResult objectNewDelete = RunObjectBenchmarkNewDelete(kObjectCount);
     const BenchResult objectFreeList = RunObjectBenchmarkAllocator<FreeListAllocator>("FreeListAllocator - GameObject", kObjectCount);
     const BenchResult objectTrackedFreeList = RunObjectBenchmarkAllocator<TrackedAllocator<FreeListAllocator>>("TrackedAllocator<FreeListAllocator> - GameObject", kObjectCount);
+    const BenchResult objectTLSF = RunObjectBenchmarkAllocator<TLSFAllocator>("TLSFAllocator - GameObject", kObjectCount);
+    const BenchResult objectTrackedTLSF = RunObjectBenchmarkAllocator<TrackedAllocator<TLSFAllocator>>("TrackedAllocator<TLSFAllocator> - GameObject", kObjectCount);
+    const BenchResult objectPool = RunObjectBenchmarkPoolAllocator("PoolAllocator - GameObject", kObjectCount);
+    const BenchResult objectTrackedPool = RunObjectBenchmarkTrackedPoolAllocator("TrackedAllocator<PoolAllocator> - GameObject", kObjectCount);
 
     const BenchResult bufferNewDelete = RunBufferBenchmarkNewDelete(kBufferCount);
     const BenchResult bufferFreeList = RunBufferBenchmarkAllocator<FreeListAllocator>("FreeListAllocator - variable buffers", kBufferCount);
     const BenchResult bufferTrackedFreeList = RunBufferBenchmarkAllocator<TrackedAllocator<FreeListAllocator>>("TrackedAllocator<FreeListAllocator> - variable buffers", kBufferCount);
+    const BenchResult bufferTLSF = RunBufferBenchmarkAllocator<TLSFAllocator>("TLSFAllocator - variable buffers", kBufferCount);
+    const BenchResult bufferTrackedTLSF = RunBufferBenchmarkAllocator<TrackedAllocator<TLSFAllocator>>("TrackedAllocator<TLSFAllocator> - variable buffers", kBufferCount);
 
     std::cout << "\nOBJECT BENCHMARKS\n";
     PrintResult(objectNewDelete);
+    PrintResult(objectPool);
+    PrintResult(objectTrackedPool);
     PrintResult(objectFreeList);
     PrintResult(objectTrackedFreeList);
+    PrintResult(objectTLSF);
+    PrintResult(objectTrackedTLSF);
 
     std::cout << "\nVARIABLE BUFFER BENCHMARKS\n";
     PrintResult(bufferNewDelete);
     PrintResult(bufferFreeList);
     PrintResult(bufferTrackedFreeList);
+    PrintResult(bufferTLSF);
+    PrintResult(bufferTrackedTLSF);
 
     std::cout << "\n================ DONE ================\n";
 
