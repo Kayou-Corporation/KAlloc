@@ -62,8 +62,12 @@ namespace Kayou::Memory
         struct BlockHeader
         {
             std::size_t size = 0;
+
+            BlockHeader* previousPhysical = nullptr; // Pointer to the previous physical block in memory (used for merging)
+
             BlockHeader* prev = nullptr;
             BlockHeader* next = nullptr;
+
             bool isFree = true;
         };
 

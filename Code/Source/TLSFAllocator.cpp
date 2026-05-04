@@ -124,9 +124,9 @@ namespace Kayou::Memory
         if (ptr == nullptr)
             return;
 
-        const std::uintptr_t userAddress = reinterpret_cast<std::uintptr_t>(ptr);
+        [[maybe_unused]] const std::uintptr_t userAddress = reinterpret_cast<std::uintptr_t>(ptr);
         const std::uintptr_t memoryStart = reinterpret_cast<std::uintptr_t>(m_memory);
-        const std::uintptr_t memoryEnd = memoryStart + m_totalSize;
+        [[maybe_unused]] const std::uintptr_t memoryEnd = memoryStart + m_totalSize;
 
         assert(userAddress >= memoryStart && userAddress < memoryEnd && "Pointer does not belong to this TLSFAllocator");
 
@@ -163,6 +163,7 @@ namespace Kayou::Memory
 
         BlockHeader* initialBlock = static_cast<BlockHeader*>(m_memory);
         initialBlock->size = m_totalSize;
+        initialBlock->previousPhysical = nullptr;
         initialBlock->prev = nullptr;
         initialBlock->next = nullptr;
         initialBlock->isFree = true;
@@ -396,6 +397,7 @@ namespace Kayou::Memory
 
         BlockHeader* newBlock = reinterpret_cast<BlockHeader*>(reinterpret_cast<std::byte*>(block) + size);
         newBlock->size = remainingSize;
+        newBlock->previousPhysical = block;
         newBlock->prev = nullptr;
         newBlock->next = nullptr;
         newBlock->isFree = true;
@@ -410,19 +412,35 @@ namespace Kayou::Memory
     {
         assert(block != nullptr);
 
+        BlockHeader* previousBlock = block->previousPhysical; // Pointer to the previous physical block in memory (used for merging)
+        if (previousBlock != nullptr && previousBlock->isFree)
+        {
+            RemoveBlock(previousBlock);
+
+            previousBlock->size += block->size;
+
+            BlockHeader* nextBlock = reinterpret_cast<BlockHeader*>(reinterpret_cast<std::byte*>(previousBlock) + previousBlock->size);
+            const std::byte* memoryEnd = static_cast<const std::byte*>(m_memory) + m_totalSize;
+
+            if (reinterpret_cast<const std::byte*>(nextBlock) < memoryEnd)
+                nextBlock->previousPhysical = previousBlock;
+
+            block = previousBlock;
+        }
+
         BlockHeader* nextBlock = reinterpret_cast<BlockHeader*>(reinterpret_cast<std::byte*>(block) + block->size);
-
         const std::byte* memoryEnd = static_cast<const std::byte*>(m_memory) + m_totalSize;
-        if (reinterpret_cast<const std::byte*>(nextBlock) >= memoryEnd)
-            return block;
 
-        if (!nextBlock->isFree)
-            return block;
+        if (reinterpret_cast<const std::byte*>(nextBlock) < memoryEnd && nextBlock->isFree)
+        {
+            RemoveBlock(nextBlock);
 
-        RemoveBlock(nextBlock);
+            block->size += nextBlock->size;
 
-        block->size += nextBlock->size;
-
+            BlockHeader* nextNextBlock = reinterpret_cast<BlockHeader*>(reinterpret_cast<std::byte*>(block) + block->size);
+            if (reinterpret_cast<const std::byte*>(nextNextBlock) < memoryEnd)
+                nextNextBlock->previousPhysical = block;
+        }
         return block;
     }
 }
