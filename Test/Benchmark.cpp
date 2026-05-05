@@ -14,26 +14,30 @@
 #include <memory>
 #include <numeric>
 #include <random>
+#include <ranges>
 #include <string_view>
 #include <type_traits>
 #include <vector>
 
+#include "DynamicPoolAllocator.hpp"
+#include "LinearAllocator.hpp"
+#include "StackAllocator.hpp"
 #include "StaticPoolAllocator.hpp"
 #include "TLSFAllocator.hpp"
 
 #ifdef _WIN32
-    #ifndef NOMINMAX
-        #define NOMINMAX
-    #endif
-
-    #include <windows.h>
-    #include <psapi.h>
-#elif defined(__linux__)
-    #include <unistd.h>
-    #include <fstream>
+#ifndef NOMINMAX
+#define NOMINMAX
 #endif
 
-namespace Benchmark
+#include <windows.h>
+#include <psapi.h>
+#elif defined(__linux__)
+#include <unistd.h>
+#include <fstream>
+#endif
+
+namespace Kayou::Memory::Benchmark
 {
     using Clock = std::chrono::steady_clock;
     using Nanoseconds = std::chrono::nanoseconds;
@@ -49,14 +53,15 @@ namespace Benchmark
     }
 
     template <typename TDerived>
-    void* AllocRaw(Kayou::Memory::TrackedAllocator<TDerived>& allocator, const std::size_t size, const std::size_t alignment)
+    void* AllocRaw(Kayou::Memory::TrackedAllocator<TDerived>& allocator, const std::size_t size,
+                   const std::size_t alignment)
     {
         return allocator.Alloc(size, Kayou::Memory::MemoryTag::General, alignment);
     }
 
     struct Timer
     {
-        Clock::time_point start {};
+        Clock::time_point start{};
 
         void Reset()
         {
@@ -71,12 +76,12 @@ namespace Benchmark
 
     [[nodiscard]] static std::uint64_t GetProcessRSSBytes()
     {
-    #ifdef _WIN32
-        PROCESS_MEMORY_COUNTERS_EX pmc {};
+#ifdef _WIN32
+        PROCESS_MEMORY_COUNTERS_EX pmc{};
         if (GetProcessMemoryInfo(GetCurrentProcess(), reinterpret_cast<PROCESS_MEMORY_COUNTERS*>(&pmc), sizeof(pmc)))
             return static_cast<std::uint64_t>(pmc.WorkingSetSize);
         return 0;
-    #elif defined(__linux__)
+#elif defined(__linux__)
         std::ifstream statm("/proc/self/statm");
         if (!statm)
             return 0;
@@ -90,9 +95,9 @@ namespace Benchmark
             return 0;
 
         return residentPages * static_cast<std::uint64_t>(pageSize);
-    #else
+#else
         return 0;
-    #endif
+#endif
     }
 
     [[nodiscard]] static double NsToMs(const Nanoseconds ns)
@@ -102,14 +107,14 @@ namespace Benchmark
 
     struct BenchResult
     {
-        std::string_view name {};
+        std::string_view name{};
         std::size_t allocationCount = 0;
         std::size_t requestedBytes = 0;
         std::size_t successfulAllocs = 0;
 
-        Nanoseconds allocTime {};
-        Nanoseconds freeTime {};
-        Nanoseconds totalTime {};
+        Nanoseconds allocTime{};
+        Nanoseconds freeTime{};
+        Nanoseconds totalTime{};
 
         std::uint64_t rssBefore = 0;
         std::uint64_t rssAfterAlloc = 0;
@@ -192,12 +197,14 @@ namespace Benchmark
 
         const double allocOpsPerSec =
             result.allocTime.count() > 0
-                ? (static_cast<double>(result.successfulAllocs) * 1'000'000'000.0 / static_cast<double>(result.allocTime.count()))
+                ? (static_cast<double>(result.successfulAllocs) * 1'000'000'000.0 / static_cast<double>(result.allocTime
+                    .count()))
                 : 0.0;
 
         const double freeOpsPerSec =
             result.freeTime.count() > 0
-                ? (static_cast<double>(result.successfulAllocs) * 1'000'000'000.0 / static_cast<double>(result.freeTime.count()))
+                ? (static_cast<double>(result.successfulAllocs) * 1'000'000'000.0 / static_cast<double>(result.freeTime.
+                    count()))
                 : 0.0;
 
         std::cout << "  alloc throughput      : " << allocOpsPerSec << " alloc/s\n";
@@ -246,14 +253,14 @@ namespace Benchmark
             std::cout << '\n';
 
             std::cout << "  fragmentation         : "
-                      << std::fixed << std::setprecision(2)
-                      << result.fragmentationRatio * 100.0 << "%\n";
+                << std::fixed << std::setprecision(2)
+                << result.fragmentationRatio * 100.0 << "%\n";
         }
     }
 
     struct GameObject
     {
-        std::array<std::byte, 256> payload {};
+        std::array<std::byte, 256> payload{};
         std::uint64_t id = 0;
         double a = 0.0;
         double b = 0.0;
@@ -261,9 +268,9 @@ namespace Benchmark
 
         explicit GameObject(const std::uint64_t value)
             : id(value)
-            , a(static_cast<double>(value))
-            , b(static_cast<double>(value) * 2.0)
-            , c(static_cast<double>(value) * 3.0)
+              , a(static_cast<double>(value))
+              , b(static_cast<double>(value) * 2.0)
+              , c(static_cast<double>(value) * 3.0)
         {
             payload[0] = static_cast<std::byte>(value & 0xFFu);
         }
@@ -277,7 +284,7 @@ namespace Benchmark
         std::vector<GameObject*> objects;
         objects.reserve(count);
 
-        BenchResult result {};
+        BenchResult result{};
         result.name = name;
         result.allocationCount = count;
         result.requestedBytes = count * sizeof(GameObject);
@@ -285,7 +292,7 @@ namespace Benchmark
         std::mt19937 rng(kSeed);
         std::vector<std::size_t> indices(count);
         std::iota(indices.begin(), indices.end(), 0);
-        std::shuffle(indices.begin(), indices.end(), rng);
+        std::ranges::shuffle(indices, rng);
 
         result.rssBefore = GetProcessRSSBytes();
         result.rssPeakObserved = result.rssBefore;
@@ -302,7 +309,7 @@ namespace Benchmark
             if (memory == nullptr)
                 break;
 
-            auto* object = new (memory) GameObject(static_cast<std::uint64_t>(i));
+            auto* object = new(memory) GameObject(static_cast<std::uint64_t>(i));
             objects.push_back(object);
 
             ++result.successfulAllocs;
@@ -351,94 +358,25 @@ namespace Benchmark
     }
 
     BenchResult RunObjectBenchmarkPoolAllocator(const std::string_view name, const std::size_t count)
-{
-    Kayou::Memory::StaticPoolAllocator allocator(
-        sizeof(GameObject),
-        count,
-        kAllocatorAlignment
-    );
-
-    std::vector<GameObject*> objects;
-    objects.reserve(count);
-
-    BenchResult result {};
-    result.name = name;
-    result.allocationCount = count;
-    result.requestedBytes = count * sizeof(GameObject);
-
-    std::mt19937 rng(kSeed);
-    std::vector<std::size_t> indices(count);
-    std::iota(indices.begin(), indices.end(), 0);
-    std::shuffle(indices.begin(), indices.end(), rng);
-
-    result.rssBefore = GetProcessRSSBytes();
-    result.rssPeakObserved = result.rssBefore;
-
-    Timer totalTimer;
-    totalTimer.Reset();
-
-    Timer allocTimer;
-    allocTimer.Reset();
-
-    for (std::size_t i = 0; i < count; ++i)
     {
-        void* memory = allocator.Alloc(sizeof(GameObject), alignof(GameObject));
-        if (memory == nullptr)
-            break;
+        Kayou::Memory::StaticPoolAllocator allocator(
+            sizeof(GameObject),
+            count,
+            kAllocatorAlignment
+        );
 
-        auto* object = new (memory) GameObject(static_cast<std::uint64_t>(i));
-        objects.push_back(object);
-
-        ++result.successfulAllocs;
-
-        const std::uint64_t rss = GetProcessRSSBytes();
-        result.rssPeakObserved = std::max(result.rssPeakObserved, rss);
-    }
-
-    result.allocTime = allocTimer.Elapsed();
-    result.rssAfterAlloc = GetProcessRSSBytes();
-    result.rssPeakObserved = std::max(result.rssPeakObserved, result.rssAfterAlloc);
-
-    result.allocatorUsedAfterAlloc = allocator.GetUsedBlocks() * allocator.GetObjectCount();
-    result.allocatorPeakAfterAlloc = allocator.GetPeakBlocks() * allocator.GetObjectCount();
-
-    Timer freeTimer;
-    freeTimer.Reset();
-
-    for (const std::size_t shuffledIndex : indices)
-    {
-        if (shuffledIndex >= objects.size() || objects[shuffledIndex] == nullptr)
-            continue;
-
-        GameObject* object = objects[shuffledIndex];
-        object->~GameObject();
-        allocator.Free(object);
-
-        const std::uint64_t rss = GetProcessRSSBytes();
-        result.rssPeakObserved = std::max(result.rssPeakObserved, rss);
-    }
-
-    result.freeTime = freeTimer.Elapsed();
-    result.totalTime = totalTimer.Elapsed();
-    result.rssAfterFree = GetProcessRSSBytes();
-
-    return result;
-}
-
-    BenchResult RunObjectBenchmarkNewDelete(const std::size_t count)
-    {
         std::vector<GameObject*> objects;
         objects.reserve(count);
 
-        BenchResult result {};
-        result.name = "new/delete - GameObject";
+        BenchResult result{};
+        result.name = name;
         result.allocationCount = count;
         result.requestedBytes = count * sizeof(GameObject);
 
         std::mt19937 rng(kSeed);
         std::vector<std::size_t> indices(count);
         std::iota(indices.begin(), indices.end(), 0);
-        std::shuffle(indices.begin(), indices.end(), rng);
+        std::ranges::shuffle(indices, rng);
 
         result.rssBefore = GetProcessRSSBytes();
         result.rssPeakObserved = result.rssBefore;
@@ -451,7 +389,77 @@ namespace Benchmark
 
         for (std::size_t i = 0; i < count; ++i)
         {
-            GameObject* object = new GameObject(static_cast<std::uint64_t>(i));
+            void* memory = allocator.Alloc(sizeof(GameObject), alignof(GameObject));
+            if (memory == nullptr)
+                break;
+
+            auto* object = new(memory) GameObject(static_cast<std::uint64_t>(i));
+            objects.push_back(object);
+
+            ++result.successfulAllocs;
+
+            const std::uint64_t rss = GetProcessRSSBytes();
+            result.rssPeakObserved = std::max(result.rssPeakObserved, rss);
+        }
+
+        result.allocTime = allocTimer.Elapsed();
+        result.rssAfterAlloc = GetProcessRSSBytes();
+        result.rssPeakObserved = std::max(result.rssPeakObserved, result.rssAfterAlloc);
+
+        result.allocatorUsedAfterAlloc = allocator.GetUsedBlocks() * allocator.GetObjectCount();
+        result.allocatorPeakAfterAlloc = allocator.GetPeakBlocks() * allocator.GetObjectCount();
+
+        Timer freeTimer;
+        freeTimer.Reset();
+
+        for (const std::size_t shuffledIndex : indices)
+        {
+            if (shuffledIndex >= objects.size() || objects[shuffledIndex] == nullptr)
+                continue;
+
+            GameObject* object = objects[shuffledIndex];
+            object->~GameObject();
+            allocator.Free(object);
+
+            const std::uint64_t rss = GetProcessRSSBytes();
+            result.rssPeakObserved = std::max(result.rssPeakObserved, rss);
+        }
+
+        result.freeTime = freeTimer.Elapsed();
+        result.totalTime = totalTimer.Elapsed();
+        result.rssAfterFree = GetProcessRSSBytes();
+
+        return result;
+    }
+
+    BenchResult RunObjectBenchmarkNewDelete(const std::size_t count)
+    {
+        std::vector<GameObject*> objects;
+        objects.reserve(count);
+
+        BenchResult result{};
+        result.name = "new/delete - GameObject";
+        result.allocationCount = count;
+        result.requestedBytes = count * sizeof(GameObject);
+
+        std::mt19937 rng(kSeed);
+        std::vector<std::size_t> indices(count);
+        std::iota(indices.begin(), indices.end(), 0);
+        std::ranges::shuffle(indices, rng);
+
+        result.rssBefore = GetProcessRSSBytes();
+        result.rssPeakObserved = result.rssBefore;
+
+        Timer totalTimer;
+        totalTimer.Reset();
+
+        Timer allocTimer;
+        allocTimer.Reset();
+
+        for (std::size_t i = 0; i < count; ++i)
+        {
+            GameObject* object;
+            object = new GameObject(i);
             objects.push_back(object);
             ++result.successfulAllocs;
 
@@ -498,10 +506,10 @@ namespace Benchmark
 
         std::mt19937 rng(kSeed);
         std::uniform_int_distribution<std::size_t> sizeDist(8, 2048);
-        const std::array<std::size_t, 5> alignments { 8, 16, 32, 64, alignof(std::max_align_t) };
+        const std::array<std::size_t, 5> alignments{8, 16, 32, 64, alignof(std::max_align_t)};
         std::uniform_int_distribution<std::size_t> alignDist(0, alignments.size() - 1);
 
-        BenchResult result {};
+        BenchResult result{};
         result.name = name;
         result.allocationCount = count;
 
@@ -526,7 +534,7 @@ namespace Benchmark
 
             std::memset(memory, static_cast<int>(i & 0xFFu), size);
 
-            allocations.push_back({ memory, size, alignment });
+            allocations.push_back({memory, size, alignment});
             ++result.successfulAllocs;
 
             const std::uint64_t rss = GetProcessRSSBytes();
@@ -537,7 +545,7 @@ namespace Benchmark
         result.rssAfterAlloc = GetProcessRSSBytes();
         result.rssPeakObserved = std::max(result.rssPeakObserved, result.rssAfterAlloc);
 
-        std::shuffle(allocations.begin(), allocations.end(), rng);
+        std::ranges::shuffle(allocations, rng);
 
         if constexpr (requires(TAllocator a) { a.GetUsedSize(); a.GetPeakSize(); })
         {
@@ -571,85 +579,85 @@ namespace Benchmark
 
 
     BenchResult RunObjectBenchmarkTrackedPoolAllocator(const std::string_view name, const std::size_t count)
-{
+    {
         constexpr std::size_t trackedBlockSize = sizeof(GameObject) + sizeof(Kayou::Memory::Internal::AllocationHeader) + kAllocatorAlignment;
         Kayou::Memory::TrackedAllocator<Kayou::Memory::StaticPoolAllocator> allocator(trackedBlockSize, count, kAllocatorAlignment);
 
-    std::vector<GameObject*> objects;
-    objects.reserve(count);
+        std::vector<GameObject*> objects;
+        objects.reserve(count);
 
-    BenchResult result {};
-    result.name = name;
-    result.allocationCount = count;
-    result.requestedBytes = count * sizeof(GameObject);
+        BenchResult result{};
+        result.name = name;
+        result.allocationCount = count;
+        result.requestedBytes = count * sizeof(GameObject);
 
-    std::mt19937 rng(kSeed);
-    std::vector<std::size_t> indices(count);
-    std::iota(indices.begin(), indices.end(), 0);
-    std::shuffle(indices.begin(), indices.end(), rng);
-        
+        std::mt19937 rng(kSeed);
+        std::vector<std::size_t> indices(count);
+        std::iota(indices.begin(), indices.end(), 0);
+        std::ranges::shuffle(indices, rng);
 
-    result.rssBefore = GetProcessRSSBytes();
-    result.rssPeakObserved = result.rssBefore;
 
-    Timer totalTimer;
-    totalTimer.Reset();
+        result.rssBefore = GetProcessRSSBytes();
+        result.rssPeakObserved = result.rssBefore;
 
-    Timer allocTimer;
-    allocTimer.Reset();
+        Timer totalTimer;
+        totalTimer.Reset();
 
-    for (std::size_t i = 0; i < count; ++i)
-    {
-        void* memory = allocator.Alloc(
-            sizeof(GameObject),
-            Kayou::Memory::MemoryTag::General,
-            alignof(GameObject)
-        );
+        Timer allocTimer;
+        allocTimer.Reset();
 
-        if (memory == nullptr)
-            break;
+        for (std::size_t i = 0; i < count; ++i)
+        {
+            void* memory = allocator.Alloc(
+                sizeof(GameObject),
+                Kayou::Memory::MemoryTag::General,
+                alignof(GameObject)
+            );
 
-        auto* object = new (memory) GameObject(static_cast<std::uint64_t>(i));
-        objects.push_back(object);
+            if (memory == nullptr)
+                break;
 
-        ++result.successfulAllocs;
+            auto* object = new(memory) GameObject(static_cast<std::uint64_t>(i));
+            objects.push_back(object);
 
-        const std::uint64_t rss = GetProcessRSSBytes();
-        result.rssPeakObserved = std::max(result.rssPeakObserved, rss);
+            ++result.successfulAllocs;
+
+            const std::uint64_t rss = GetProcessRSSBytes();
+            result.rssPeakObserved = std::max(result.rssPeakObserved, rss);
+        }
+
+        result.allocTime = allocTimer.Elapsed();
+        result.rssAfterAlloc = GetProcessRSSBytes();
+        result.rssPeakObserved = std::max(result.rssPeakObserved, result.rssAfterAlloc);
+
+        result.allocatorUsedAfterAlloc =
+            allocator.GetAllocator().GetUsedBlocks() * allocator.GetAllocator().GetObjectCount();
+
+        result.allocatorPeakAfterAlloc =
+            allocator.GetAllocator().GetPeakBlocks() * allocator.GetAllocator().GetObjectCount();
+
+        Timer freeTimer;
+        freeTimer.Reset();
+
+        for (const std::size_t shuffledIndex : indices)
+        {
+            if (shuffledIndex >= objects.size() || objects[shuffledIndex] == nullptr)
+                continue;
+
+            GameObject* object = objects[shuffledIndex];
+            object->~GameObject();
+            allocator.Free(object);
+
+            const std::uint64_t rss = GetProcessRSSBytes();
+            result.rssPeakObserved = std::max(result.rssPeakObserved, rss);
+        }
+
+        result.freeTime = freeTimer.Elapsed();
+        result.totalTime = totalTimer.Elapsed();
+        result.rssAfterFree = GetProcessRSSBytes();
+
+        return result;
     }
-
-    result.allocTime = allocTimer.Elapsed();
-    result.rssAfterAlloc = GetProcessRSSBytes();
-    result.rssPeakObserved = std::max(result.rssPeakObserved, result.rssAfterAlloc);
-
-    result.allocatorUsedAfterAlloc =
-        allocator.GetAllocator().GetUsedBlocks() * allocator.GetAllocator().GetObjectCount();
-
-    result.allocatorPeakAfterAlloc =
-        allocator.GetAllocator().GetPeakBlocks() * allocator.GetAllocator().GetObjectCount();
-
-    Timer freeTimer;
-    freeTimer.Reset();
-
-    for (const std::size_t shuffledIndex : indices)
-    {
-        if (shuffledIndex >= objects.size() || objects[shuffledIndex] == nullptr)
-            continue;
-
-        GameObject* object = objects[shuffledIndex];
-        object->~GameObject();
-        allocator.Free(object);
-
-        const std::uint64_t rss = GetProcessRSSBytes();
-        result.rssPeakObserved = std::max(result.rssPeakObserved, rss);
-    }
-
-    result.freeTime = freeTimer.Elapsed();
-    result.totalTime = totalTimer.Elapsed();
-    result.rssAfterFree = GetProcessRSSBytes();
-
-    return result;
-}
 
 
     BenchResult RunBufferBenchmarkNewDelete(const std::size_t count)
@@ -659,10 +667,10 @@ namespace Benchmark
 
         std::mt19937 rng(kSeed);
         std::uniform_int_distribution<std::size_t> sizeDist(8, 2048);
-        const std::array<std::size_t, 5> alignments { 8, 16, 32, 64, alignof(std::max_align_t) };
+        const std::array<std::size_t, 5> alignments{8, 16, 32, 64, alignof(std::max_align_t)};
         std::uniform_int_distribution<std::size_t> alignDist(0, alignments.size() - 1);
 
-        BenchResult result {};
+        BenchResult result{};
         result.name = "new/delete - variable buffers";
         result.allocationCount = count;
 
@@ -681,12 +689,12 @@ namespace Benchmark
             const std::size_t alignment = alignments[alignDist(rng)];
             result.requestedBytes += size;
 
-            void* memory = ::operator new(size, std::align_val_t(alignment), std::nothrow);
+            void* memory = ::operator new(size, static_cast<std::align_val_t>(alignment), std::nothrow);
             if (memory == nullptr)
                 continue;
 
             std::memset(memory, static_cast<int>(i & 0xFFu), size);
-            allocations.push_back({ memory, size, alignment });
+            allocations.push_back({memory, size, alignment});
             ++result.successfulAllocs;
 
             const std::uint64_t rss = GetProcessRSSBytes();
@@ -697,14 +705,14 @@ namespace Benchmark
         result.rssAfterAlloc = GetProcessRSSBytes();
         result.rssPeakObserved = std::max(result.rssPeakObserved, result.rssAfterAlloc);
 
-        std::shuffle(allocations.begin(), allocations.end(), rng);
+        std::ranges::shuffle(allocations, rng);
 
         Timer freeTimer;
         freeTimer.Reset();
 
         for (const BufferAllocation& alloc : allocations)
         {
-            ::operator delete(alloc.ptr, std::align_val_t(alloc.alignment));
+            ::operator delete(alloc.ptr, static_cast<std::align_val_t>(alloc.alignment));
 
             const std::uint64_t rss = GetProcessRSSBytes();
             result.rssPeakObserved = std::max(result.rssPeakObserved, rss);
@@ -716,15 +724,436 @@ namespace Benchmark
 
         return result;
     }
+
+
+    BenchResult RunObjectBenchmarkDynamicPoolAllocator(const std::string_view name, const std::size_t count)
+    {
+        Kayou::Memory::DynamicPoolAllocator allocator(
+            sizeof(GameObject),
+            1024,
+            kAllocatorAlignment
+        );
+
+        std::vector<GameObject*> objects;
+        objects.reserve(count);
+
+        BenchResult result{};
+        result.name = name;
+        result.allocationCount = count;
+        result.requestedBytes = count * sizeof(GameObject);
+
+        std::mt19937 rng(kSeed);
+        std::vector<std::size_t> indices(count);
+        std::iota(indices.begin(), indices.end(), 0);
+        std::ranges::shuffle(indices, rng);
+
+        result.rssBefore = GetProcessRSSBytes();
+        result.rssPeakObserved = result.rssBefore;
+
+        Timer totalTimer;
+        totalTimer.Reset();
+
+        Timer allocTimer;
+        allocTimer.Reset();
+
+        for (std::size_t i = 0; i < count; ++i)
+        {
+            void* memory = allocator.Alloc(sizeof(GameObject), alignof(GameObject));
+            if (memory == nullptr)
+                break;
+
+            auto* object = new(memory) GameObject(static_cast<std::uint64_t>(i));
+            objects.push_back(object);
+
+            ++result.successfulAllocs;
+
+            const std::uint64_t rss = GetProcessRSSBytes();
+            result.rssPeakObserved = std::max(result.rssPeakObserved, rss);
+        }
+
+        result.allocTime = allocTimer.Elapsed();
+        result.rssAfterAlloc = GetProcessRSSBytes();
+        result.rssPeakObserved = std::max(result.rssPeakObserved, result.rssAfterAlloc);
+
+        result.allocatorUsedAfterAlloc = allocator.GetUsedBlocks() * allocator.GetBlockStride();
+        result.allocatorPeakAfterAlloc = allocator.GetPeakBlocks() * allocator.GetBlockStride();
+
+        Timer freeTimer;
+        freeTimer.Reset();
+
+        for (const std::size_t shuffledIndex : indices)
+        {
+            if (shuffledIndex >= objects.size() || objects[shuffledIndex] == nullptr)
+                continue;
+
+            GameObject* object = objects[shuffledIndex];
+            object->~GameObject();
+            allocator.Free(object);
+
+            const std::uint64_t rss = GetProcessRSSBytes();
+            result.rssPeakObserved = std::max(result.rssPeakObserved, rss);
+        }
+
+        result.freeTime = freeTimer.Elapsed();
+        result.totalTime = totalTimer.Elapsed();
+        result.rssAfterFree = GetProcessRSSBytes();
+
+        return result;
+    }
+
+    BenchResult RunObjectBenchmarkTrackedDynamicPoolAllocator(const std::string_view name, const std::size_t count)
+    {
+        constexpr std::size_t trackedBlockCapacity =
+            sizeof(GameObject)
+            + sizeof(Kayou::Memory::Internal::AllocationHeader)
+            + kAllocatorAlignment;
+
+        Kayou::Memory::TrackedAllocator<Kayou::Memory::DynamicPoolAllocator> allocator(
+            trackedBlockCapacity,
+            1024,
+            kAllocatorAlignment
+        );
+
+        std::vector<GameObject*> objects;
+        objects.reserve(count);
+
+        BenchResult result{};
+        result.name = name;
+        result.allocationCount = count;
+        result.requestedBytes = count * sizeof(GameObject);
+
+        std::mt19937 rng(kSeed);
+        std::vector<std::size_t> indices(count);
+        std::iota(indices.begin(), indices.end(), 0);
+        std::ranges::shuffle(indices, rng);
+
+        result.rssBefore = GetProcessRSSBytes();
+        result.rssPeakObserved = result.rssBefore;
+
+        Timer totalTimer;
+        totalTimer.Reset();
+
+        Timer allocTimer;
+        allocTimer.Reset();
+
+        for (std::size_t i = 0; i < count; ++i)
+        {
+            void* memory = allocator.Alloc(
+                sizeof(GameObject),
+                Kayou::Memory::MemoryTag::General,
+                alignof(GameObject)
+            );
+
+            if (memory == nullptr)
+                break;
+
+            auto* object = new(memory) GameObject(static_cast<std::uint64_t>(i));
+            objects.push_back(object);
+
+            ++result.successfulAllocs;
+
+            const std::uint64_t rss = GetProcessRSSBytes();
+            result.rssPeakObserved = std::max(result.rssPeakObserved, rss);
+        }
+
+        result.allocTime = allocTimer.Elapsed();
+        result.rssAfterAlloc = GetProcessRSSBytes();
+        result.rssPeakObserved = std::max(result.rssPeakObserved, result.rssAfterAlloc);
+
+        result.allocatorUsedAfterAlloc =
+            allocator.GetAllocator().GetUsedBlocks() * allocator.GetAllocator().GetBlockStride();
+
+        result.allocatorPeakAfterAlloc =
+            allocator.GetAllocator().GetPeakBlocks() * allocator.GetAllocator().GetBlockStride();
+
+        Timer freeTimer;
+        freeTimer.Reset();
+
+        for (const std::size_t shuffledIndex : indices)
+        {
+            if (shuffledIndex >= objects.size() || objects[shuffledIndex] == nullptr)
+                continue;
+
+            GameObject* object = objects[shuffledIndex];
+            object->~GameObject();
+            allocator.Free(object);
+
+            const std::uint64_t rss = GetProcessRSSBytes();
+            result.rssPeakObserved = std::max(result.rssPeakObserved, rss);
+        }
+
+        result.freeTime = freeTimer.Elapsed();
+        result.totalTime = totalTimer.Elapsed();
+        result.rssAfterFree = GetProcessRSSBytes();
+
+        return result;
+    }
+
+
+    BenchResult RunObjectBenchmarkStackAllocator(const std::string_view name, const std::size_t count)
+    {
+        Kayou::Memory::StackAllocator allocator(kAllocatorSize, kAllocatorAlignment);
+
+        std::vector<GameObject*> objects;
+        objects.reserve(count);
+
+        BenchResult result{};
+        result.name = name;
+        result.allocationCount = count;
+        result.requestedBytes = count * sizeof(GameObject);
+
+        result.rssBefore = GetProcessRSSBytes();
+        result.rssPeakObserved = result.rssBefore;
+
+        Timer totalTimer;
+        totalTimer.Reset();
+
+        Timer allocTimer;
+        allocTimer.Reset();
+
+        for (std::size_t i = 0; i < count; ++i)
+        {
+            void* memory = allocator.Alloc(sizeof(GameObject), alignof(GameObject));
+            if (memory == nullptr)
+                break;
+
+            auto* object = new(memory) GameObject(static_cast<std::uint64_t>(i));
+            objects.push_back(object);
+
+            ++result.successfulAllocs;
+
+            const std::uint64_t rss = GetProcessRSSBytes();
+            result.rssPeakObserved = std::max(result.rssPeakObserved, rss);
+        }
+
+        result.allocTime = allocTimer.Elapsed();
+        result.rssAfterAlloc = GetProcessRSSBytes();
+        result.rssPeakObserved = std::max(result.rssPeakObserved, result.rssAfterAlloc);
+
+        result.allocatorUsedAfterAlloc = allocator.GetUsedSize();
+        result.allocatorPeakAfterAlloc = allocator.GetPeakSize();
+
+        Timer freeTimer;
+        freeTimer.Reset();
+
+        for (GameObject* object : std::views::reverse(objects))
+        {
+            object->~GameObject();
+            allocator.Free(object);
+
+            const std::uint64_t rss = GetProcessRSSBytes();
+            result.rssPeakObserved = std::max(result.rssPeakObserved, rss);
+        }
+
+        result.freeTime = freeTimer.Elapsed();
+        result.totalTime = totalTimer.Elapsed();
+        result.rssAfterFree = GetProcessRSSBytes();
+
+        return result;
+    }
+
+
+    BenchResult RunObjectBenchmarkTrackedStackAllocator(const std::string_view name, const std::size_t count)
+    {
+        Kayou::Memory::TrackedAllocator<Kayou::Memory::StackAllocator> allocator(kAllocatorSize, kAllocatorAlignment);
+
+        std::vector<GameObject*> objects;
+        objects.reserve(count);
+
+        BenchResult result{};
+        result.name = name;
+        result.allocationCount = count;
+        result.requestedBytes = count * sizeof(GameObject);
+
+        result.rssBefore = GetProcessRSSBytes();
+        result.rssPeakObserved = result.rssBefore;
+
+        Timer totalTimer;
+        totalTimer.Reset();
+
+        Timer allocTimer;
+        allocTimer.Reset();
+
+        for (std::size_t i = 0; i < count; ++i)
+        {
+            void* memory = allocator.Alloc(
+                sizeof(GameObject),
+                Kayou::Memory::MemoryTag::General,
+                alignof(GameObject)
+            );
+
+            if (memory == nullptr)
+                break;
+
+            auto* object = new(memory) GameObject(static_cast<std::uint64_t>(i));
+            objects.push_back(object);
+
+            ++result.successfulAllocs;
+
+            const std::uint64_t rss = GetProcessRSSBytes();
+            result.rssPeakObserved = std::max(result.rssPeakObserved, rss);
+        }
+
+        result.allocTime = allocTimer.Elapsed();
+        result.rssAfterAlloc = GetProcessRSSBytes();
+        result.rssPeakObserved = std::max(result.rssPeakObserved, result.rssAfterAlloc);
+
+        result.allocatorUsedAfterAlloc = allocator.GetAllocator().GetUsedSize();
+        result.allocatorPeakAfterAlloc = allocator.GetAllocator().GetPeakSize();
+
+        Timer freeTimer;
+        freeTimer.Reset();
+
+        for (GameObject* object : std::views::reverse(objects))
+        {
+            object->~GameObject();
+            allocator.Free(object);
+
+            const std::uint64_t rss = GetProcessRSSBytes();
+            result.rssPeakObserved = std::max(result.rssPeakObserved, rss);
+        }
+
+        result.freeTime = freeTimer.Elapsed();
+        result.totalTime = totalTimer.Elapsed();
+        result.rssAfterFree = GetProcessRSSBytes();
+
+        return result;
+    }
+
+
+    BenchResult RunObjectBenchmarkLinearAllocator(const std::string_view name, const std::size_t count)
+    {
+        Kayou::Memory::LinearAllocator allocator(kAllocatorSize, kAllocatorAlignment);
+
+        std::vector<GameObject*> objects;
+        objects.reserve(count);
+
+        BenchResult result {};
+        result.name = name;
+        result.allocationCount = count;
+        result.requestedBytes = count * sizeof(GameObject);
+
+        result.rssBefore = GetProcessRSSBytes();
+        result.rssPeakObserved = result.rssBefore;
+
+        Timer totalTimer;
+        totalTimer.Reset();
+
+        Timer allocTimer;
+        allocTimer.Reset();
+
+        for (std::size_t i = 0; i < count; ++i)
+        {
+            void* memory = allocator.Alloc(sizeof(GameObject), alignof(GameObject));
+            if (memory == nullptr)
+                break;
+
+            auto* object = new (memory) GameObject(static_cast<std::uint64_t>(i));
+            objects.push_back(object);
+            ++result.successfulAllocs;
+
+            const std::uint64_t rss = GetProcessRSSBytes();
+            result.rssPeakObserved = std::max(result.rssPeakObserved, rss);
+        }
+
+        result.allocTime = allocTimer.Elapsed();
+
+        result.allocatorUsedAfterAlloc = allocator.GetUsedSize();
+        result.allocatorPeakAfterAlloc = allocator.GetPeakSize();
+
+        Timer freeTimer;
+        freeTimer.Reset();
+
+        for (GameObject* object : objects)
+            object->~GameObject();
+
+        allocator.Reset();
+
+        result.freeTime = freeTimer.Elapsed();
+        result.totalTime = totalTimer.Elapsed();
+
+        result.rssAfterAlloc = GetProcessRSSBytes();
+        result.rssAfterFree = GetProcessRSSBytes();
+
+        return result;
+    }
+
+
+    BenchResult RunObjectBenchmarkTrackedLinearAllocator(const std::string_view name, const std::size_t count)
+    {
+        Kayou::Memory::TrackedAllocator<Kayou::Memory::LinearAllocator> allocator(
+            kAllocatorSize,
+            kAllocatorAlignment
+        );
+
+        std::vector<GameObject*> objects;
+        objects.reserve(count);
+
+        BenchResult result {};
+        result.name = name;
+        result.allocationCount = count;
+        result.requestedBytes = count * sizeof(GameObject);
+
+        result.rssBefore = GetProcessRSSBytes();
+        result.rssPeakObserved = result.rssBefore;
+
+        Timer totalTimer;
+        totalTimer.Reset();
+
+        Timer allocTimer;
+        allocTimer.Reset();
+
+        for (std::size_t i = 0; i < count; ++i)
+        {
+            void* memory = allocator.Alloc(
+                sizeof(GameObject),
+                Kayou::Memory::MemoryTag::General,
+                alignof(GameObject)
+            );
+
+            if (memory == nullptr)
+                break;
+
+            auto* object = new (memory) GameObject(static_cast<std::uint64_t>(i));
+            objects.push_back(object);
+            ++result.successfulAllocs;
+
+            const std::uint64_t rss = GetProcessRSSBytes();
+            result.rssPeakObserved = std::max(result.rssPeakObserved, rss);
+        }
+
+        result.allocTime = allocTimer.Elapsed();
+
+        result.allocatorUsedAfterAlloc = allocator.GetAllocator().GetUsedSize();
+        result.allocatorPeakAfterAlloc = allocator.GetAllocator().GetPeakSize();
+
+        Timer freeTimer;
+        freeTimer.Reset();
+
+        for (GameObject* object : objects)
+            object->~GameObject();
+
+        allocator.Reset();
+
+        result.freeTime = freeTimer.Elapsed();
+        result.totalTime = totalTimer.Elapsed();
+
+        result.rssAfterAlloc = GetProcessRSSBytes();
+        result.rssAfterFree = GetProcessRSSBytes();
+
+        return result;
+    }
 }
 
 int main()
 {
-    using namespace Benchmark;
+    using namespace Kayou::Memory::Benchmark;
     using Kayou::Memory::FreeListAllocator;
     using Kayou::Memory::TrackedAllocator;
     using Kayou::Memory::TLSFAllocator;
     using Kayou::Memory::StaticPoolAllocator;
+    using Kayou::Memory::DynamicPoolAllocator;
+    using Kayou::Memory::StackAllocator;
 
     constexpr std::size_t kObjectCount = 5000;
     constexpr std::size_t kBufferCount = 5000;
@@ -741,6 +1170,12 @@ int main()
     const BenchResult objectTrackedTLSF = RunObjectBenchmarkAllocator<TrackedAllocator<TLSFAllocator>>("TrackedAllocator<TLSFAllocator> - GameObject", kObjectCount);
     const BenchResult objectPool = RunObjectBenchmarkPoolAllocator("PoolAllocator - GameObject", kObjectCount);
     const BenchResult objectTrackedPool = RunObjectBenchmarkTrackedPoolAllocator("TrackedAllocator<PoolAllocator> - GameObject", kObjectCount);
+    const BenchResult objectDynamicPool = RunObjectBenchmarkPoolAllocator("DynamicPoolAllocator - GameObject", kObjectCount);
+    const BenchResult objectTrackedDynamicPool = RunObjectBenchmarkTrackedDynamicPoolAllocator("TrackedAllocator<DynamicPoolAllocator> - GameObject", kObjectCount);
+    const BenchResult objectStack = RunObjectBenchmarkStackAllocator("StackAllocator - GameObject LIFO", kObjectCount);
+    const BenchResult objectTrackedStack = RunObjectBenchmarkTrackedStackAllocator("TrackedAllocator<StackAllocator> - GameObject LIFO", kObjectCount);
+    const BenchResult objectLinear = RunObjectBenchmarkLinearAllocator("LinearAllocator - GameObject reset", kObjectCount);
+    const BenchResult objectTrackedLinear = RunObjectBenchmarkTrackedLinearAllocator("TrackedAllocator<LinearAllocator> - GameObject reset", kObjectCount);
 
     const BenchResult bufferNewDelete = RunBufferBenchmarkNewDelete(kBufferCount);
     const BenchResult bufferFreeList = RunBufferBenchmarkAllocator<FreeListAllocator>("FreeListAllocator - variable buffers", kBufferCount);
@@ -750,7 +1185,13 @@ int main()
 
     std::cout << "\nOBJECT BENCHMARKS\n";
     PrintResult(objectNewDelete);
+    PrintResult(objectLinear);
+    PrintResult(objectTrackedLinear);
+    PrintResult(objectStack);
+    PrintResult(objectTrackedStack);
     PrintResult(objectPool);
+    PrintResult(objectDynamicPool);
+    PrintResult(objectTrackedDynamicPool);
     PrintResult(objectTrackedPool);
     PrintResult(objectFreeList);
     PrintResult(objectTrackedFreeList);

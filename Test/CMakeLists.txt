@@ -9,7 +9,7 @@ endif()
 
 # Which test should be enable (only one can be enabled at once)
 # Options prefixed with `T` are TrackedAllocators
-set(KALLOC_TEST_MODE "TDYNAMICPOOL" CACHE STRING "Allocator test to run")
+set(KALLOC_TEST_MODE "BENCHMARK" CACHE STRING "Allocator test to run")
 set_property(CACHE KALLOC_TEST_MODE PROPERTY STRINGS BENCHMARK STACK FREELIST TLSF DYNAMICPOOL TDYNAMICPOOL TLINEAR TSTATICPOOL TSTACK TFREELIST TTLSF)
 
 if (KALLOC_TEST_MODE STREQUAL "BENCHMARK")
