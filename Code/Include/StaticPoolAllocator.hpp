@@ -8,20 +8,20 @@
 
 namespace Kayou::Memory
 {
-    class PoolAllocator
+    class StaticPoolAllocator
     {
     public:
         /// @brief Constructor used to register a new Pool Allocator
         /// @param blockCapacity The desired block's capacity
         /// @param objectCount The number of objects
         /// @param memAlignment [OPTIONAL] The desired memory alignment (must always be a multiple-of-two)
-        PoolAllocator(std::size_t blockCapacity, std::size_t objectCount, std::size_t memAlignment = alignof(std::max_align_t));
-        ~PoolAllocator();
+        StaticPoolAllocator(std::size_t blockCapacity, std::size_t objectCount, std::size_t memAlignment = alignof(std::max_align_t));
+        ~StaticPoolAllocator();
 
-        PoolAllocator(const PoolAllocator&) = delete;
-        PoolAllocator(PoolAllocator&&) = delete;
-        PoolAllocator& operator=(const PoolAllocator&) = delete;
-        PoolAllocator& operator=(PoolAllocator&&) = delete;
+        StaticPoolAllocator(const StaticPoolAllocator&) = delete;
+        StaticPoolAllocator(StaticPoolAllocator&&) = delete;
+        StaticPoolAllocator& operator=(const StaticPoolAllocator&) = delete;
+        StaticPoolAllocator& operator=(StaticPoolAllocator&&) = delete;
 
         /// @brief Function used to register a new allocation
         /// @param size The size of the allocation

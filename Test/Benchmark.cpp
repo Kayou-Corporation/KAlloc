@@ -18,7 +18,7 @@
 #include <type_traits>
 #include <vector>
 
-#include "PoolAllocator.hpp"
+#include "StaticPoolAllocator.hpp"
 #include "TLSFAllocator.hpp"
 
 #ifdef _WIN32
@@ -352,7 +352,7 @@ namespace Benchmark
 
     BenchResult RunObjectBenchmarkPoolAllocator(const std::string_view name, const std::size_t count)
 {
-    Kayou::Memory::PoolAllocator allocator(
+    Kayou::Memory::StaticPoolAllocator allocator(
         sizeof(GameObject),
         count,
         kAllocatorAlignment
@@ -573,7 +573,7 @@ namespace Benchmark
     BenchResult RunObjectBenchmarkTrackedPoolAllocator(const std::string_view name, const std::size_t count)
 {
         constexpr std::size_t trackedBlockSize = sizeof(GameObject) + sizeof(Kayou::Memory::Internal::AllocationHeader) + kAllocatorAlignment;
-        Kayou::Memory::TrackedAllocator<Kayou::Memory::PoolAllocator> allocator(trackedBlockSize, count, kAllocatorAlignment);
+        Kayou::Memory::TrackedAllocator<Kayou::Memory::StaticPoolAllocator> allocator(trackedBlockSize, count, kAllocatorAlignment);
 
     std::vector<GameObject*> objects;
     objects.reserve(count);
@@ -724,7 +724,7 @@ int main()
     using Kayou::Memory::FreeListAllocator;
     using Kayou::Memory::TrackedAllocator;
     using Kayou::Memory::TLSFAllocator;
-    using Kayou::Memory::PoolAllocator;
+    using Kayou::Memory::StaticPoolAllocator;
 
     constexpr std::size_t kObjectCount = 5000;
     constexpr std::size_t kBufferCount = 5000;

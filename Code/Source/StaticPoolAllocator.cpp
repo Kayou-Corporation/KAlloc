@@ -1,4 +1,4 @@
-#include "PoolAllocator.hpp"
+#include "StaticPoolAllocator.hpp"
 
 #include <algorithm>
 #include <bit>
@@ -19,7 +19,7 @@
 namespace Kayou::Memory
 {
 
-    std::size_t PoolAllocator::GetBlockIndex(const void* ptr) const
+    std::size_t StaticPoolAllocator::GetBlockIndex(const void* ptr) const
     {
         const std::uintptr_t ptrAddress = reinterpret_cast<std::uintptr_t>(ptr);
         const std::uintptr_t startAddress = reinterpret_cast<std::uintptr_t>(m_start);
@@ -29,7 +29,7 @@ namespace Kayou::Memory
     }
 
 
-    PoolAllocator::PoolAllocator(const std::size_t blockCapacity, const std::size_t objectCount, const std::size_t memAlignment)
+    StaticPoolAllocator::StaticPoolAllocator(const std::size_t blockCapacity, const std::size_t objectCount, const std::size_t memAlignment)
     {
         assert(blockCapacity > 0 && "PoolAllocator blockCapacity must be > 0");
         assert(objectCount > 0 && "PoolAllocator objectCount must be > 0");
@@ -61,7 +61,7 @@ namespace Kayou::Memory
     }
 
 
-    PoolAllocator::~PoolAllocator()
+    StaticPoolAllocator::~StaticPoolAllocator()
     {
         #ifdef _WIN32
         _aligned_free(m_start);
@@ -81,7 +81,7 @@ namespace Kayou::Memory
     }
 
 
-    void PoolAllocator::InitFreeList()
+    void StaticPoolAllocator::InitFreeList()
     {
         m_freeList = nullptr;
 
@@ -96,7 +96,7 @@ namespace Kayou::Memory
     }
 
 
-    void* PoolAllocator::Alloc(const std::size_t size, const std::size_t memAlignment)
+    void* StaticPoolAllocator::Alloc(const std::size_t size, const std::size_t memAlignment)
     {
         // Fixed-size pool: allocation fails if size exceeds block capacity
         if (size == 0 || size > m_blockCapacity)
@@ -128,7 +128,7 @@ namespace Kayou::Memory
     }
 
 
-    void PoolAllocator::Free(void* ptr)
+    void StaticPoolAllocator::Free(void* ptr)
     {
         if (ptr == nullptr)
             return;
@@ -158,13 +158,13 @@ namespace Kayou::Memory
 
 
     // Note that InitFreeList() does not reset m_peakBlocks
-    void PoolAllocator::Reset()
+    void StaticPoolAllocator::Reset()
     {
         InitFreeList();
     }
 
 
-    void PoolAllocator::PrintUsage() const
+    void StaticPoolAllocator::PrintUsage() const
     {
         printf("Pool Allocator: %zu / %zu blocks used (peak: %zu) | blockSize = %zu | total = %zu bytes\n",
             m_usedBlocks, m_objectCount, m_peakBlocks, m_blockStride, m_totalSize);
