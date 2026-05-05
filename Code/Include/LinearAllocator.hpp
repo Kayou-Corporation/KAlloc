@@ -9,7 +9,6 @@ namespace Kayou::Memory
     class LinearAllocator
     {
     public:
-
         /// @brief Constructor used to register a new Linear Allocator
         /// @param size The allocation size
         /// @param memAlignment [OPTIONAL] The desired memory alignment (must always be a multiple-of-two)

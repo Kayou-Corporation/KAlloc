@@ -12,7 +12,6 @@ namespace Kayou::Memory
     class FreeListAllocator
     {
     public:
-
         /// @brief Constructor used to register a new Free List Allocator
         /// @param size The total size of the allocator
         /// @param memAlignment [OPTIONAL] The desired memory alignment (must always be a multiple-of-two)

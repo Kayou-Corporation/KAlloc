@@ -194,9 +194,8 @@ void* FreeListAllocator::Alloc(const std::size_t size, const std::size_t memAlig
 
     void FreeListAllocator::PrintUsage() const
     {
-        printf("FreeList Allocator: %zu used / %zu total | peak = %zu\n", m_usedSize, m_totalSize, m_peakSize);
-
-        printf("Free blocks: %zu | Largest free: %zu | Fragmentation: %.2f%%\n", GetFreeBlockCount(), GetLargestFreeBlockSize(), GetFragmentationRatio() * 100.0);
+        std::printf("FreeList Allocator: %zu used / %zu total | peak = %zu\n", m_usedSize, m_totalSize, m_peakSize);
+        std::printf("Free blocks: %zu | Largest free: %zu | Fragmentation: %.2f%%\n", GetFreeBlockCount(), GetLargestFreeBlockSize(), GetFragmentationRatio() * 100.0);
     }
 
 

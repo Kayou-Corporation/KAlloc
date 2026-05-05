@@ -166,7 +166,7 @@ namespace Kayou::Memory
 
     void StaticPoolAllocator::PrintUsage() const
     {
-        printf("Pool Allocator: %zu / %zu blocks used (peak: %zu) | blockSize = %zu | total = %zu bytes\n",
+        std::printf("Pool Allocator: %zu / %zu blocks used (peak: %zu) | blockSize = %zu | total = %zu bytes\n",
             m_usedBlocks, m_objectCount, m_peakBlocks, m_blockStride, m_totalSize);
     }
 }

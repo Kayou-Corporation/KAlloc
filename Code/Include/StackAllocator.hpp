@@ -10,7 +10,6 @@ namespace Kayou::Memory
     class StackAllocator
     {
     public:
-
         /// @brief Constructor used to register a new Stack Allocator
         /// @param size The allocation size
         /// @param memAlignment [OPTIONAL] The desired memory alignment (must always be a multiple-of-two)

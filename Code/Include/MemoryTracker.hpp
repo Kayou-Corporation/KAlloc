@@ -22,7 +22,6 @@ namespace Kayou::Memory
     class MemoryTracker
     {
     public:
-
         /// Internal function called by TrackedAllocator, used to register an allocation internally
         /// @param ptr The pointer to allocate
         /// @param size The allocation block size
@@ -42,7 +41,7 @@ namespace Kayou::Memory
         /// Internal function used to print the allocation report into the console
         static void PrintReport();
 
-        /// Internal helper function used to convert a MemoryTag into a char* in order to be forwarded to Tracy
+        /// Internal helper function used to convert a MemoryTag into a char* to be forwarded to Tracy
         static const char* GetTagName(MemoryTag tag);
 
 

@@ -28,7 +28,6 @@ namespace Kayou::Memory
         TrackedAllocator& operator=(TrackedAllocator&&) = delete;
         TrackedAllocator& operator=(const TrackedAllocator&) = delete;
 
-
         /// @brief Function used to register a new allocation
         /// @param size The size of the allocation
         /// @param tag [OPTIONAL] A tag used to differentiate allocation blocks - Defaults to MemoryTag::General
@@ -57,9 +56,9 @@ namespace Kayou::Memory
             header->tag = tag;
             header->adjustment = static_cast<std::uint32_t>(userAddress - rawAddress);
 
-        #ifdef KAYOU_DEBUG
-            header->magic = Internal::kAllocationHeaderMagic;
-        #endif
+            #ifdef KAYOU_DEBUG
+                header->magic = Internal::kAllocationHeaderMagic;
+            #endif
 
             void* userPtr = reinterpret_cast<void*>(userAddress);
             MemoryTracker::AddAllocation(userPtr, size, tag);
@@ -69,7 +68,6 @@ namespace Kayou::Memory
 
             return userPtr;
         }
-
 
         /// @brief Function used to free any FreeableAllocator's allocation
         /// @param ptr Pointer to the allocation to free
@@ -81,7 +79,7 @@ namespace Kayou::Memory
             const Internal::AllocationHeader* header = Internal::GetAllocationHeader(ptr);
 
             #ifdef KAYOU_DEBUG
-            assert(header->magic == Internal::kAllocationHeaderMagic && "Allocation header corrupted or invalid pointer");
+                assert(header->magic == Internal::kAllocationHeaderMagic && "Allocation header corrupted or invalid pointer");
             #endif
 
             const std::uintptr_t userAddress = reinterpret_cast<std::uintptr_t>(ptr);
@@ -101,7 +99,7 @@ namespace Kayou::Memory
                 const auto it = m_activeAllocations.find(ptr);
 
                 #ifdef KAYOU_DEBUG
-                assert(it != m_activeAllocations.end() && "TrackedAllocator::Free unknown pointer");
+                    assert(it != m_activeAllocations.end() && "TrackedAllocator::Free unknown pointer");
                 #endif
 
                 if (it != m_activeAllocations.end())
@@ -110,7 +108,6 @@ namespace Kayou::Memory
 
             m_derived.Free(rawPtr);
         }
-
 
         /// @brief Function used to reset the linear allocator
         ///        Because, by concept, a Linear Allocator will free the entire allocated block,
@@ -124,7 +121,6 @@ namespace Kayou::Memory
             m_derived.Reset();
         }
 
-
         /// @brief Function used to print the allocator's usage
         KAYOU_ALWAYS_INLINE void PrintUsage() const requires PrintableAllocator<Derived>    { m_derived.PrintUsage(); }
 
@@ -133,7 +129,6 @@ namespace Kayou::Memory
 
         /// @return The desired allocator (const)
         KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE const Derived& GetAllocator() const            { return m_derived; }
-
 
 
     private:
@@ -152,8 +147,6 @@ namespace Kayou::Memory
 
             MemoryTracker::RemoveAllocation(ptr, size, tag);
         }
-
-
         std::unordered_map<void*, ActiveAllocation> m_activeAllocations { };
         Derived m_derived;
     };
