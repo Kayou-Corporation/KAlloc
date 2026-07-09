@@ -1,3 +1,6 @@
 [submodule "Libs/Tracy"]
 	path = Libs/Tracy
 	url = https://github.com/wolfpld/tracy.git
+[submodule "Libs/KUtils"]
+	path = Libs/KUtils
+	url = https://github.com/Kayou-Corporation/KUtils.git

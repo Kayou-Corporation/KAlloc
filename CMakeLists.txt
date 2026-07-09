@@ -84,6 +84,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 #---------------------------------------#
 # Toggle tracy internal integration
 
+target_link_libraries(KAlloc PUBLIC KUtils::KUtils)
+
 if (KALLOC_USE_TRACY)
     # Tracy folder include is done inside `Libs/CMakeLists.txt`
     target_link_libraries(KAlloc PUBLIC Tracy::TracyClient)

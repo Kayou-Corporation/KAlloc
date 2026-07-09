@@ -6,7 +6,7 @@
 #include <cstddef>
 #include <cstdint>      // GCC std::uint32_t & std::uintptr_t
 
-#include "Utils/Utils.hpp"
+#include "Preprocessor.hpp"
 
 
 namespace Kayou::Memory
@@ -34,13 +34,13 @@ namespace Kayou::Memory::Internal
 #endif
 
 
-    KAYOU_ALWAYS_INLINE AllocationHeader* GetAllocationHeader(void* ptr)
+    KINLINE AllocationHeader* GetAllocationHeader(void* ptr)
     {
         return reinterpret_cast<AllocationHeader*>(reinterpret_cast<std::uintptr_t>(ptr) - sizeof(AllocationHeader));
     }
 
 
-    KAYOU_ALWAYS_INLINE const AllocationHeader* GetAllocationHeader(const void* ptr)
+    KINLINE const AllocationHeader* GetAllocationHeader(const void* ptr)
     {
         return reinterpret_cast<const AllocationHeader*>(reinterpret_cast<std::uintptr_t>(ptr) - sizeof(AllocationHeader));
     }

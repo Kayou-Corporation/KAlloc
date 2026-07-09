@@ -4,8 +4,7 @@
 #include <cstdint>
 #include <vector>
 
-#include "Utils/Utils.hpp"
-
+#include "Preprocessor.hpp"
 
 
 namespace Kayou::Memory
@@ -43,7 +42,7 @@ namespace Kayou::Memory
         };
 
         /// @brief Saves the current allocation state of the arena and returns a marker that can be used to roll back to it later
-        KAYOU_NO_DISCARD Marker SaveMarker() const;
+        KNO_DISCARD Marker SaveMarker() const;
 
         /// @brief Rolls back the arena to a previously saved marker, invalidating all allocations made after that marker
         void RollbackToMarker(Marker marker);
@@ -52,22 +51,22 @@ namespace Kayou::Memory
         void PrintUsage() const;
 
         /// @return The page size used by the arena
-        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE std::size_t GetDefaultPageSize() const     { return m_defaultPageSize; }
+        KNO_DISCARD KINLINE std::size_t GetDefaultPageSize() const     { return m_defaultPageSize; }
 
         /// @return The number of pages currently allocated by the arena
-        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE std::size_t GetPageCount() const           { return m_pages.size(); }
+        KNO_DISCARD KINLINE std::size_t GetPageCount() const           { return m_pages.size(); }
 
         /// @return The memory alignment used by the arena
-        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE std::size_t GetAlignment() const           { return m_alignment; }
+        KNO_DISCARD KINLINE std::size_t GetAlignment() const           { return m_alignment; }
 
         /// @return The total used size across all pages
-        KAYOU_NO_DISCARD std::size_t GetUsedSize() const;
+        KNO_DISCARD std::size_t GetUsedSize() const;
 
         /// @return The peak used size across all pages
-        KAYOU_NO_DISCARD std::size_t GetPeakSize() const;
+        KNO_DISCARD std::size_t GetPeakSize() const;
 
         /// @return The total capacity across all pages
-        KAYOU_NO_DISCARD std::size_t GetTotalSize() const;
+        KNO_DISCARD std::size_t GetTotalSize() const;
 
     private:
         struct Page

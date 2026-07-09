@@ -3,7 +3,7 @@
 #include <cstddef>
 #include <vector>
 
-#include "Utils/Utils.hpp"
+#include "Preprocessor.hpp"
 
 
 
@@ -43,34 +43,34 @@ namespace Kayou::Memory
         void PrintUsage() const;
 
         /// @return The raw capacity (size) of the block
-        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE size_t GetRawBlockCapacity() const         { return m_blockCapacity; }
+        KNO_DISCARD KINLINE size_t GetRawBlockCapacity() const         { return m_blockCapacity; }
 
         /// @return The stride (offset) of the block
-        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE size_t GetBlockStride() const              { return m_blockStride; }
+        KNO_DISCARD KINLINE size_t GetBlockStride() const              { return m_blockStride; }
 
         /// @return The object count inside the block
-        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE size_t GetBlocksPerPage() const            { return m_blocksPerPage; }
+        KNO_DISCARD KINLINE size_t GetBlocksPerPage() const            { return m_blocksPerPage; }
 
         /// @return The object count inside the block
-        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE size_t GetPageCount() const                { return m_pages.size(); }
+        KNO_DISCARD KINLINE size_t GetPageCount() const                { return m_pages.size(); }
 
         /// @return The memory alignment of the block
-        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE size_t GetAlignment() const                { return m_alignment; }
+        KNO_DISCARD KINLINE size_t GetAlignment() const                { return m_alignment; }
 
         /// @return The total size of the allocator (free and used), in bytes
-        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE size_t GetTotalSize() const                { return m_totalSize; }
+        KNO_DISCARD KINLINE size_t GetTotalSize() const                { return m_totalSize; }
 
         /// @return The number of used blocks
-        KAYOU_NO_DISCARD size_t GetUsedBlocks() const;
+        KNO_DISCARD size_t GetUsedBlocks() const;
 
         /// @return The number of free blocks
-        KAYOU_NO_DISCARD size_t GetFreeBlocks() const;
+        KNO_DISCARD size_t GetFreeBlocks() const;
 
         /// @return The peak block usage
-        KAYOU_NO_DISCARD size_t GetPeakBlocks() const;
+        KNO_DISCARD size_t GetPeakBlocks() const;
 
         /// @return The total number of blocks (free and used) across all pages
-        KAYOU_NO_DISCARD std::size_t GetTotalBlockCount() const;
+        KNO_DISCARD std::size_t GetTotalBlockCount() const;
 
 
 
