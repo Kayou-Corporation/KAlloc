@@ -41,10 +41,10 @@ namespace Kayou::Memory::Profiler
     #define KFrameMark ((void)0)
 
     /// Helper function used when `USE_TRACY` is enabled in the CMakeLists.txt to track allocations inside Tracy
-    KAYOU_ALWAYS_INLINE void Alloc([[maybe_unused]] const void* ptr, [[maybe_unused]] const std::size_t size, [[maybe_unused]] const char* tag = "Unspecified") { }
+    KINLINE void Alloc([[maybe_unused]] const void* ptr, [[maybe_unused]] const std::size_t size, [[maybe_unused]] const char* tag = "Unspecified") { }
 
     /// Helper function used when `USE_TRACY` is enabled in the CMakeLists.txt to untrack allocations inside Tracy
-    KAYOU_ALWAYS_INLINE void Free([[maybe_unused]] const void* ptr, [[maybe_unused]] const char* tag = "Unspecified") { }
+    KINLINE void Free([[maybe_unused]] const void* ptr, [[maybe_unused]] const char* tag = "Unspecified") { }
 
 #endif
 }
