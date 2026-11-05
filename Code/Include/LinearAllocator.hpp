@@ -1,7 +1,9 @@
 #pragma once
 
 #include "MemoryAllocator.hpp"
-#include "Utils/Utils.hpp"
+
+#include "Preprocessor.hpp"
+
 
 
 namespace Kayou::Memory
@@ -9,7 +11,6 @@ namespace Kayou::Memory
     class LinearAllocator
     {
     public:
-
         /// @brief Constructor used to register a new Linear Allocator
         /// @param size The allocation size
         /// @param memAlignment [OPTIONAL] The desired memory alignment (must always be a multiple-of-two)
@@ -36,16 +37,16 @@ namespace Kayou::Memory
         void PrintUsage() const;
 
         /// @return The size of the memory currently in use, in bytes
-        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE std::size_t GetUsedSize() const            { return m_usedSize; }
+        KNO_DISCARD KINLINE std::size_t GetUsedSize() const            { return m_usedSize; }
 
         /// @return the current peak allocation value
-        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE std::size_t GetPeakSize() const            { return m_peakSize; }
+        KNO_DISCARD KINLINE std::size_t GetPeakSize() const            { return m_peakSize; }
 
         /// @return The total size of the allocator (free and used), in bytes
-        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE std::size_t GetTotalSize() const           { return m_totalSize; }
+        KNO_DISCARD KINLINE std::size_t GetTotalSize() const           { return m_totalSize; }
 
         /// @return The current offset (alignment) of the allocator
-        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE std::size_t GetOffset() const              { return m_offset; }
+        KNO_DISCARD KINLINE std::size_t GetOffset() const              { return m_offset; }
 
 
     private:

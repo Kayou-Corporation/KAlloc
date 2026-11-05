@@ -3,7 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 
-#include "Utils/Utils.hpp"
+#include "Preprocessor.hpp"
 
 
 
@@ -12,7 +12,6 @@ namespace Kayou::Memory
     class FreeListAllocator
     {
     public:
-
         /// @brief Constructor used to register a new Free List Allocator
         /// @param size The total size of the allocator
         /// @param memAlignment [OPTIONAL] The desired memory alignment (must always be a multiple-of-two)
@@ -41,28 +40,28 @@ namespace Kayou::Memory
         void PrintUsage() const;
 
         /// @return The size of the memory currently in use, in bytes
-        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE std::size_t GetUsedSize() const            { return m_usedSize; }
+        KNO_DISCARD KINLINE std::size_t GetUsedSize() const            { return m_usedSize; }
 
         /// @return The peak used size reached by the allocator
-        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE std::size_t GetPeakSize() const            { return m_peakSize; }
+        KNO_DISCARD KINLINE std::size_t GetPeakSize() const            { return m_peakSize; }
 
         /// @return The total size of the allocator (free and used), in bytes
-        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE std::size_t GetTotalSize() const           { return m_totalSize; }
+        KNO_DISCARD KINLINE std::size_t GetTotalSize() const           { return m_totalSize; }
 
         /// @return The current memory alignment of the allocator
-        KAYOU_NO_DISCARD KAYOU_ALWAYS_INLINE std::size_t GetAlignment() const           { return m_alignment; }
+        KNO_DISCARD KINLINE std::size_t GetAlignment() const           { return m_alignment; }
 
         /// @return The number of free blocks currently available in the allocator
-        KAYOU_NO_DISCARD std::size_t GetFreeBlockCount() const;
+        KNO_DISCARD std::size_t GetFreeBlockCount() const;
 
         /// @return The size of the largest free block currently available in the allocator, in bytes
-        KAYOU_NO_DISCARD std::size_t GetLargestFreeBlockSize() const;
+        KNO_DISCARD std::size_t GetLargestFreeBlockSize() const;
 
         /// @return The total size of all free blocks currently available in the allocator, in bytes
-        KAYOU_NO_DISCARD std::size_t GetTotalFreeSize() const;
+        KNO_DISCARD std::size_t GetTotalFreeSize() const;
 
         /// @return The fragmentation ratio of the allocator, calculated as (1 - (largest free block size / total free size))
-        KAYOU_NO_DISCARD double GetFragmentationRatio() const;
+        KNO_DISCARD double GetFragmentationRatio() const;
 
 
     private:

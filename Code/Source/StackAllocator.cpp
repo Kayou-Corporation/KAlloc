@@ -137,7 +137,7 @@ namespace Kayou::Memory
 
     void StackAllocator::PrintUsage() const
     {
-        printf("Stack Allocator: %zu bytes used (offset = %zu, peak = %zu) / %zu total\n", m_usedSize, m_offset, m_peakSize, m_totalSize);
+        std::printf("Stack Allocator: %zu bytes used (offset = %zu, peak = %zu) / %zu total\n", m_usedSize, m_offset, m_peakSize, m_totalSize);
     }
 
 }

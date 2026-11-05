@@ -40,8 +40,9 @@
       "cacheVariables": {
         "CMAKE_CXX_COMPILER": "clang++$env{clang_compiler_v}",
         "CMAKE_BUILD_TYPE": "Debug",
-        "DEBUG_ENABLED": "ON",
-        "BUILD_EXECUTABLE": "ON"
+        "KALLOC_DEBUG_ENABLED": "ON",
+        "KALLOC_BUILD_EXECUTABLE": "ON",
+        "KALLOC_USE_TRACY": "ON"
       }
     },
     {
@@ -51,8 +52,8 @@
       "cacheVariables": {
         "CMAKE_CXX_COMPILER": "clang++$env{clang_compiler_v}",
         "CMAKE_BUILD_TYPE": "Release",
-        "DEBUG_ENABLED": "OFF",
-        "BUILD_EXECUTABLE": "OFF"
+        "KALLOC_DEBUG_ENABLED": "OFF",
+        "KALLOC_BUILD_EXECUTABLE": "OFF"
       }
     },
     {
@@ -62,8 +63,9 @@
       "cacheVariables": {
         "CMAKE_CXX_COMPILER": "clang++$env{clang_compiler_v}",
         "CMAKE_BUILD_TYPE": "Release",
-        "DEBUG_ENABLED": "OFF",
-        "BUILD_EXECUTABLE": "ON"
+        "KALLOC_DEBUG_ENABLED": "OFF",
+        "KALLOC_BUILD_EXECUTABLE": "ON",
+        "KALLOC_USE_TRACY": "ON"
       }
     },
     {
@@ -73,8 +75,9 @@
       "cacheVariables": {
         "CMAKE_CXX_COMPILER": "g++$env{gcc_compiler_v}",
         "CMAKE_BUILD_TYPE": "Debug",
-        "DEBUG_ENABLED": "ON",
-        "BUILD_EXECUTABLE": "ON"
+        "KALLOC_DEBUG_ENABLED": "ON",
+        "KALLOC_BUILD_EXECUTABLE": "ON",
+        "KALLOC_USE_TRACY": "ON"
       }
     },
     {
@@ -84,8 +87,8 @@
       "cacheVariables": {
         "CMAKE_CXX_COMPILER": "g++$env{gcc_compiler_v}",
         "CMAKE_BUILD_TYPE": "Release",
-        "DEBUG_ENABLED": "OFF",
-        "BUILD_EXECUTABLE": "OFF"
+        "KALLOC_DEBUG_ENABLED": "OFF",
+        "KALLOC_BUILD_EXECUTABLE": "OFF"
       }
     },
 
@@ -96,8 +99,8 @@
       "cacheVariables": {
         "CMAKE_CXX_COMPILER": "clang++",
         "CMAKE_BUILD_TYPE": "Debug",
-        "DEBUG_ENABLED": "ON",
-        "BUILD_EXECUTABLE": "ON"
+        "KALLOC_DEBUG_ENABLED": "ON",
+        "KALLOC_BUILD_EXECUTABLE": "ON"
       }
     },
     {
@@ -107,8 +110,7 @@
       "cacheVariables": {
         "CMAKE_CXX_COMPILER": "clang++",
         "CMAKE_BUILD_TYPE": "Release",
-        "DEBUG_ENABLED": "OFF",
-        "BUILD_EXECUTABLE": "OFF"
+        "KALLOC_DEBUG_ENABLED": "OFF"
       }
     },
 
@@ -119,8 +121,9 @@
       "cacheVariables": {
         "CMAKE_CXX_COMPILER": "g++",
         "CMAKE_BUILD_TYPE": "Debug",
-        "DEBUG_ENABLED": "ON",
-        "BUILD_EXECUTABLE": "ON"
+        "KALLOC_DEBUG_ENABLED": "ON",
+        "KALLOC_BUILD_EXECUTABLE": "ON",
+        "KALLOC_USE_TRACY": "ON"
       }
     },
     {
@@ -130,8 +133,8 @@
       "cacheVariables": {
         "CMAKE_CXX_COMPILER": "g++",
         "CMAKE_BUILD_TYPE": "Release",
-        "DEBUG_ENABLED": "OFF",
-        "BUILD_EXECUTABLE": "OFF"
+        "KALLOC_DEBUG_ENABLED": "OFF",
+        "KALLOC_BUILD_EXECUTABLE": "OFF"
       }
     },
 

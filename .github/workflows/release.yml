@@ -57,7 +57,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           submodules: recursive
 
@@ -68,7 +68,7 @@ jobs:
           sudo apt-get install -y ninja-build clang g++
 
       - name: Configure
-        run: cmake --preset "${{ matrix.configure_preset }}" -DUSE_TRACY=OFF
+        run: cmake --preset "${{ matrix.configure_preset }}" -DKALLOC_USE_TRACY=OFF
 
       - name: Build
         run: cmake --build --preset "${{ matrix.build_preset }}"
@@ -87,7 +87,7 @@ jobs:
           zip -r "../../../${{ matrix.package_name }}.zip" .
 
       - name: Upload package
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.package_name }}
           path: ${{ matrix.package_name }}.zip
@@ -104,7 +104,7 @@ jobs:
 
     steps:
       - name: Download packages
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: release-packages
           merge-multiple: true

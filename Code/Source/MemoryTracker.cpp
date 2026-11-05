@@ -45,10 +45,10 @@ namespace Kayou::Memory
 
     void MemoryTracker::PrintReport()
     {
-        printf("==== Memory Report ====\n");
+        std::printf("==== Memory Report ====\n");
 
         for (size_t i = 0; i < static_cast<std::size_t>(MemoryTag::COUNT); ++i)
-            printf("[%zu] Used: %zu bytes  -  Peak: %zu bytes\n\n", i, s_allocated[i].load(), s_peak[i].load());
+            std::printf("[%zu] Used: %zu bytes  -  Peak: %zu bytes\n\n", i, s_allocated[i].load(), s_peak[i].load());
     }
 
 
